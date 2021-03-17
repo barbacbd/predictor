@@ -1,6 +1,6 @@
 from unittest import TestCase, main
 from cluster.data import DataSet, Vector
-from cluster.algorithm import create_centroids
+from cluster.algorithm import kmeans_pp
 from random import uniform, randint
 from os import remove
 
@@ -48,7 +48,8 @@ class TestDataSetCreation(TestCase):
         dataset = DataSet(DATA_FILE, dimensions=1)
         data = dataset.data
 
-        centroids, seed = create_centroids(data, 2)
+        centroids, seed = kmeans_pp(data=data, k=2)
+        print(f"seed = {seed}")
         for centroid in centroids:
             print(str(centroid))
 

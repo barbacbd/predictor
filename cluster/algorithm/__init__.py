@@ -1,6 +1,5 @@
-from .kmeans import create_centroids, create_centroids_seeded
+from .kmeans import kmeans_pp
 
 __all__ = [
-    'create_centroids',
-    'create_centroids_seeded'
+    'kmeans_pp'
 ]
