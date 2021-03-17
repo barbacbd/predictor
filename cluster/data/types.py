@@ -1,4 +1,5 @@
 from os.path import exists
+from math import sqrt
 
 
 class Vector:
@@ -19,6 +20,11 @@ class Vector:
         self.z = z
         self.w = w
 
+    def __str__(self):
+
+        data = {sl: getattr(self, sl) for sl in self.__slots__ if getattr(self, sl) is not None}
+        return " ".join([f"{x} = {y}" for x, y in data.items()])
+
     @property
     def dimensions(self):
         """
@@ -31,6 +37,18 @@ class Vector:
             index += 1
         
         return index
+
+    def distance(self, other):
+        """
+        :param other:
+        :return:
+        """
+        if isinstance(other, Vector) and self.dimensions == other.dimensions:
+            sum = 0
+            for var in self.__slots__:
+                if getattr(self, var) is not None and getattr(other, var) is not None:
+                    sum += (getattr(self, var) - getattr(other, var))**2
+            return sqrt(sum)
 
 
 class DataSet:
@@ -64,28 +82,31 @@ class DataSet:
     def filename(self):
         return self._filename
 
+    @property
+    def data(self):
+        return self._data.copy()
+
     def _read(self):
         """
         ..note:: 
             Only going to Read in Single 
         """
-
-        temp_data = []
         leftovers = []
         
         if exists(self._filename):
             with open(self._filename) as _f:
 
-                _line = _f.readline().strip()
-                leftovers.extend([float(x) for x in _line.split() if x])
+                for _, line in enumerate(_f):
+                    _line = line.strip()
+                    leftovers.extend([float(x) for x in _line.split() if x])
 
-                while len(leftovers) >= self._dimensions:
-                    # make a new data point from this information before reading more
-                    make_into_data = leftovers[:self._dimensions]
-                    self._data.append(Vector(
-                        x=make_into_data[0] if self._dimensions >=1 else None,
-                        y=make_into_data[1] if self._dimensions >= 2 else None,
-                        z=make_into_data[2] if self._dimensions >= 3 else None,
-                        w=make_into_data[3] if self._dimensions == 4 else None
-                    ))
-                    leftovers = leftovers[self._dimensions:]
+                    while len(leftovers) >= self._dimensions:
+                        # make a new data point from this information before reading more
+                        make_into_data = leftovers[:self._dimensions]
+                        self._data.append(Vector(
+                            x=make_into_data[0] if self._dimensions >=1 else None,
+                            y=make_into_data[1] if self._dimensions >= 2 else None,
+                            z=make_into_data[2] if self._dimensions >= 3 else None,
+                            w=make_into_data[3] if self._dimensions == 4 else None
+                        ))
+                        leftovers = leftovers[self._dimensions:]

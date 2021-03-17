@@ -22,6 +22,7 @@ setup(
     package_data={'': ['VERSION']},
     python_requires='>=3.4, <4',
     install_requires=[
+        'futures'
     ],
     dependency_links=[
         'https://pypi.org/simple/'
