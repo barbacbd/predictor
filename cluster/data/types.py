@@ -1,5 +1,6 @@
 from os.path import exists
 from math import sqrt
+from copy import deepcopy
 
 
 class Vector:
@@ -20,10 +21,70 @@ class Vector:
         self.z = z
         self.w = w
 
+    def __iter__(self):
+        for var in self.__slots__:
+            yield var
+
     def __str__(self):
 
         data = {sl: getattr(self, sl) for sl in self.__slots__ if getattr(self, sl) is not None}
-        return " ".join([f"{x} = {y}" for x, y in data.items()])
+        return " ".join(["{} = {}".format(x, y) for x, y in data.items()])
+
+    def __add__(self, other):
+        """
+        Add two Vectors together
+        """
+        if self.dimensions != other.dimensions:
+            return None
+
+        result = Vector()
+        for var in self.__slots__:
+            if getattr(self, var, None) is not None and getattr(other, var, None) is not None:
+                setattr(result, var, getattr(self, var) + getattr(other, var))
+
+        return result
+
+    def __sub__(self, other):
+        """
+        Subtract one vector components from another
+        """
+        if self.dimensions != other.dimensions:
+            return None
+
+        result = Vector()
+        for var in self.__slots__:
+            if getattr(self, var, None) is not None and getattr(other, var, None) is not None:
+                setattr(result, var, getattr(self, var) - getattr(other, var))
+
+        return result
+
+    def __mul__(self, other):
+        """
+        Multiply the two vectors together
+        """
+        if self.dimensions != other.dimensions:
+            return None
+
+        result = Vector()
+        for var in self.__slots__:
+            if getattr(self, var, None) is not None and getattr(other, var, None) is not None:
+                setattr(result, var, getattr(self, var) * getattr(other, var))
+
+        return result
+
+    def __truediv__(self, other):
+        """
+        Divide the two vector components
+        """
+        if self.dimensions != other.dimensions:
+            return None
+
+        result = Vector()
+        for var in self.__slots__:
+            if getattr(self, var, None) is not None and getattr(other, var, None) is not None:
+                setattr(result, var, getattr(self, var) / getattr(other, var))
+
+        return result
 
     @property
     def dimensions(self):
@@ -60,7 +121,7 @@ class DataSet:
 
         .. note::
             if the name is not present. The filename (without extension) will be the name of the dataset.
-        :param dimension: Number of dimensions for the data [options = [1,2,3,4]]
+        :param dimensions: Number of dimensions for the data [options = [1,2,3,4]]
         """
         if name is None:
             self._name = filename.split("/")[-1].split(".")[0]
@@ -84,7 +145,7 @@ class DataSet:
 
     @property
     def data(self):
-        return self._data.copy()
+        return deepcopy(self._data)
 
     def _read(self):
         """

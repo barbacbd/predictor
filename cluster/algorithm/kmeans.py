@@ -6,7 +6,7 @@ from copy import deepcopy
 from collections import defaultdict
 
 
-def _find_min_dist_centroid(dp: Vector, centroids, idx):
+def _find_min_dist_centroid(dp, centroids, idx):
     """
     Possible Batched run. Find the minimum distance from the point provided
     to each of the centroids.
@@ -28,7 +28,7 @@ def _find_min_dist_centroid(dp: Vector, centroids, idx):
     return distance, idx, closest_centroid_pos
 
 
-def kmeans_pp(data: [Vector], k: int, max_threads: int = 10, seed: int = None):
+def kmeans_pp(data, k, max_threads=10, seed=None):
     """
     kmeans++ algorithm for generating the centroid points. If provided,
     the seed is used to find the first centroid point. Providing the seed is
@@ -76,7 +76,7 @@ def kmeans_pp(data: [Vector], k: int, max_threads: int = 10, seed: int = None):
     return centroids, seed
 
 
-def _find_min_max_values(data: [Vector]):
+def _find_min_max_values(data):
     """
     Find all minimum and maximum values and store them into vectors
 
@@ -86,7 +86,7 @@ def _find_min_max_values(data: [Vector]):
     max_vector = Vector()
     min_vector = Vector()
 
-    for var in ('x', 'y', 'z', 'w'):
+    for var in Vector():
 
         min_var = maxsize
         max_var = -maxsize
@@ -102,7 +102,7 @@ def _find_min_max_values(data: [Vector]):
     return min_vector, max_vector
 
 
-def _generate_random_vector(min_v: Vector, max_v: Vector):
+def _generate_random_vector(min_v, max_v):
     """
     Generate Random Data that is between the min and max values for the vectors
 
@@ -112,17 +112,17 @@ def _generate_random_vector(min_v: Vector, max_v: Vector):
     """
     result = Vector()
 
-    for var in ('x', 'y', 'z', 'w'):
+    for var in Vector():
         if getattr(min_v, var, None) is not None and getattr(max_v, var, None) is not None:
             setattr(result, var, uniform(getattr(min_v, var), getattr(max_v, var)))
     return result
 
 
-def match_centroid_to_data(data: [Vector], centroids: {}, max_threads: int = 10):
+def match_centroid_to_data(data, centroids, max_threads=10):
     """
 
-    :param data:
-    :param centroids:
+    :param data: list
+    :param centroids: dictionary
     :return:
     """
     data_to_closest_centoid = [None] * len(data)
@@ -137,7 +137,7 @@ def match_centroid_to_data(data: [Vector], centroids: {}, max_threads: int = 10)
     return data_to_closest_centoid
 
 
-def group_to_centroids(data: [Vector], data_to_closest_centroid):
+def group_to_centroids(data, data_to_closest_centroid):
     """
 
     :param data:
