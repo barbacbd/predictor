@@ -25,3 +25,18 @@ def mean(data):
             setattr(total_vector, var, getattr(total_vector, var) / num_used)
 
     return total_vector
+
+
+def sum(data):
+    """
+    Calculate the sume of all data Vectors
+
+    :param data:
+    :return:
+    """
+    total_vector = deepcopy(data[0])
+
+    for idx in range(1, len(data)):
+        total_vector = total_vector + data[idx]
+
+    return total_vector

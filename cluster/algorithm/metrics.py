@@ -1,6 +1,7 @@
-from .kmeans import match_centroid_to_data, group_to_centroids
-from ..data.math import mean
+from .kmeans import create_clusters
+from ..data.math import mean, sum
 from math import log
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 def ball_hall(data, centroids, max_threads=10):
@@ -12,12 +13,11 @@ def ball_hall(data, centroids, max_threads=10):
     :param max_threads: number of threads to use when running the algorithm [default = 10]
     :return: Mean of the mean dispersion across clusters
     """
-    data_to_closest_centroid = match_centroid_to_data(data, centroids=centroids, max_threads=max_threads)
-    groups = group_to_centroids(data, data_to_closest_centroid)
+    clusters = create_clusters(data, centroids, max_threads=max_threads)
 
     # find the average distance to each centroid in the list of centroids
     dists = {}
-    for x, y in groups.items():
+    for x, y in clusters.items():
         _sum = sum([y.distance(centroids[x])]) / len(y)
         dists[x] = _sum
 
@@ -35,11 +35,10 @@ def banfeld_raferty(data, centroids, max_threads=10):
     :param max_threads: number of threads to use when running the algorithm [default = 10]
     :return:
     """
-    data_to_closest_centroid = match_centroid_to_data(data, centroids=centroids, max_threads=max_threads)
-    groups = group_to_centroids(data, data_to_closest_centroid)
+    clusters = create_clusters(data, centroids, max_threads=max_threads)
 
     total_distance_per_cluster = 0
-    for clusterIndex, cluster in groups.items():
+    for clusterIndex, cluster in clusters.items():
         # find the mean or center point of the cluster (Not the cluster point)
         cluster_center = mean(cluster)
 
@@ -50,3 +49,52 @@ def banfeld_raferty(data, centroids, max_threads=10):
         total_distance_per_cluster += (len(cluster) * log(distance_to_center / len(cluster)))
 
     return total_distance_per_cluster
+
+
+def dist_from_one_to_all(dp, dp_list):
+    """
+
+    :param dp:
+    :param dp_list:
+    :return: list containing the distance from dp to all points in dp_list
+    """
+    return [dp.distance(list_point) for list_point in dp_list]
+
+
+def c_index(data, centroids, max_threads=10):
+    """
+    C-Index
+
+    Measure of Compactness
+
+    :param data:
+    :param centroids:
+    :param max_threads:
+    :return:
+    """
+    clusters = create_clusters(data, centroids, max_threads=max_threads)
+
+    total_sum = 0.0
+    total_members = 0
+
+    for clusterIndex, cluster in clusters.items():
+
+        cluster_dists = []
+        with ThreadPoolExecutor(max_workers=max_threads) as executor:
+            futr_dists = {executor.submit(dist_from_one_to_all, cluster[i], cluster[i+1:]):
+                              i for i in range(len(cluster)-1)}
+            for futr in as_completed(futr_dists):
+                cluster_dists.extend(futr.result()[0])
+
+        total_sum += sum(cluster_dists)
+        total_members += len(cluster_dists)
+
+    # Perform the same calculation that was performed on each cluster on
+    # the entire list of data
+    total_data_dists = []
+    with ThreadPoolExecutor(max_workers=max_threads) as executor:
+        futr_dists = {executor.submit(dist_from_one_to_all, data[i], data[i + 1:]):
+                          i for i in range(len(data) - 1)}
+        for futr in as_completed(futr_dists):
+            total_data_dists.extend(futr.result()[0])
+

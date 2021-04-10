@@ -156,6 +156,19 @@ def group_to_centroids(data, data_to_closest_centroid):
     return groups
 
 
+def create_clusters(data, centroids, max_threads=10):
+    """
+    :param data: list of Vector points
+    :param centroids: dictionary
+    :param max_threads: 
+
+    :return: groups or clusters where all data points are fit to a cluster
+    """
+    data_to_closest_centroid = match_centroid_to_data(data, centroids=centroids, max_threads=max_threads)
+    groups = group_to_centroids(data, data_to_closest_centroid)
+
+    return groups
+
 # def kmeans(data: [Vector], k: int, max_threads: int = 10, seed: int = None, kmeans_pp=False):
 #     """
 #
