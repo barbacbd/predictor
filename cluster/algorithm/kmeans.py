@@ -4,6 +4,7 @@ from sys import maxsize
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from copy import deepcopy
 from collections import defaultdict
+from .. import __MAX_THREADS
 
 
 def _find_min_dist_centroid(dp, centroids, idx):
@@ -28,7 +29,7 @@ def _find_min_dist_centroid(dp, centroids, idx):
     return distance, idx, closest_centroid_pos
 
 
-def kmeans_pp(data, k, max_threads=10, seed=None):
+def kmeans_pp(data, k, multithread=True, seed=None):
     """
     kmeans++ algorithm for generating the centroid points. If provided,
     the seed is used to find the first centroid point. Providing the seed is
@@ -39,7 +40,7 @@ def kmeans_pp(data, k, max_threads=10, seed=None):
 
     :param data: list of cluster.data.type.Vector objects
     :param k: number of centroids to find
-    :param max_threads: maximum number or threads that can be spun up (Batch size) [default=10]
+    :param multithread: when true, multithread the algorithm with the suggested number of threads
     :param seed: index of the data to be used as the first centroid
     ..note::
         If None [default] is provided, then the seed will be chosen randomly
@@ -57,13 +58,15 @@ def kmeans_pp(data, k, max_threads=10, seed=None):
     # the first centroid is the data point at position seed
     centroids = [data[seed]]
 
+    num_threads = __MAX_THREADS if multithread else 1
+
     # one centroid is already generated
     for c in range(k-1):
 
         distances = [0.0] * len(data)
 
         # find the min distance from every point to every centroid
-        with ThreadPoolExecutor(max_workers=max_threads) as executor:
+        with ThreadPoolExecutor(max_workers=num_threads) as executor:
             futr_dists = {executor.submit(_find_min_dist_centroid, data[idx], centroids, idx):
                     idx for idx in range(0, len(data))}
             for futr in as_completed(futr_dists):
@@ -118,17 +121,22 @@ def _generate_random_vector(min_v, max_v):
     return result
 
 
-def match_centroid_to_data(data, centroids, max_threads=10):
+def match_centroid_to_data(data, centroids, multithread=True):
     """
+    Find the centroid that is closest to each datapoint
 
     :param data: list
     :param centroids: dictionary
+    :param multithread: when true, multithread the algorithm with the suggested number of threads
+
     :return:
     """
     data_to_closest_centoid = [None] * len(data)
 
+    num_threads = __MAX_THREADS if multithread else 1
+
     # find the min distance from every point to every centroid
-    with ThreadPoolExecutor(max_workers=max_threads) as executor:
+    with ThreadPoolExecutor(max_workers=num_threads) as executor:
         futr_dists = {executor.submit(_find_min_dist_centroid, data[idx], centroids, idx):
                           idx for idx in range(0, len(data))}
         for futr in as_completed(futr_dists):
@@ -156,15 +164,18 @@ def group_to_centroids(data, data_to_closest_centroid):
     return groups
 
 
-def create_clusters(data, centroids, max_threads=10):
+def create_clusters(data, centroids, multithread=True):
     """
+    Create the clusters by find the centroid that is closest to each datapoint
+    then grouping all of the data points by centroid ID (number).
+
     :param data: list of Vector points
     :param centroids: dictionary
-    :param max_threads: 
+    :param multithread: when true, multithread the algorithm with the suggested number of threads
 
     :return: groups or clusters where all data points are fit to a cluster
     """
-    data_to_closest_centroid = match_centroid_to_data(data, centroids=centroids, max_threads=max_threads)
+    data_to_closest_centroid = match_centroid_to_data(data, centroids=centroids, multithread=multithread)
     groups = group_to_centroids(data, data_to_closest_centroid)
 
     return groups

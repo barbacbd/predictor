@@ -1,6 +1,7 @@
 from unittest import TestCase, main
 from cluster.data import DataSet, Vector
 from cluster.algorithm import kmeans_pp
+from cluster.algorithm.metrics import ball_hall, banfeld_raferty
 from random import uniform, randint
 from os import remove
 
@@ -49,9 +50,14 @@ class TestDataSetCreation(TestCase):
         data = dataset.data
 
         centroids, seed = kmeans_pp(data=data, k=2)
-        print(f"seed = {seed}")
-        for centroid in centroids:
-            print(str(centroid))
+
+        print("Finished Centroids")
+
+        metric = ball_hall(data, centroids)
+        print("Ball Hall Metric = {}".format(metric))
+
+        metric = banfeld_raferty(data, centroids)
+        print("Banfeld Raferty Metric = {}".format(metric))
 
 
 if __name__ == '__main__':

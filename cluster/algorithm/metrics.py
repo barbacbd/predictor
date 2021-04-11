@@ -4,38 +4,35 @@ from math import log
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
-def ball_hall(data, centroids, max_threads=10):
+def ball_hall(data, centroids, multithread=True):
     """
     Ball-Hall Index Metric
 
     :param data: list of all data points as vectors
     :param centroids: List of all centroids (Vectors)
-    :param max_threads: number of threads to use when running the algorithm [default = 10]
+    :param multithread: when true, multithread the algorithm with the suggested number of threads
     :return: Mean of the mean dispersion across clusters
     """
-    clusters = create_clusters(data, centroids, max_threads=max_threads)
+    clusters = create_clusters(data, centroids, multithread=multithread)
 
     # find the average distance to each centroid in the list of centroids
     dists = {}
     for x, y in clusters.items():
-        _sum = sum([y.distance(centroids[x])]) / len(y)
-        dists[x] = _sum
+        dists[x] = sum([_y.distance(centroids[x]) for _y in y]) / len(y)
 
     return sum([y for x, y in dists.items()]) / len(dists)
 
 
-def banfeld_raferty(data, centroids, max_threads=10):
+def banfeld_raferty(data, centroids, multithread=True):
     """
     Banfeld-Raferty Metric
 
-    Weighted Sum of the Log of traces of the variance-covariance matrix of each cluster
-
     :param data: list of all data points as vectors
     :param centroids: List of all centroids (Vectors)
-    :param max_threads: number of threads to use when running the algorithm [default = 10]
-    :return:
+    :param multithread: when true, multithread the algorithm with the suggested number of threads
+    :return: Weighted Sum of the Log of traces of the variance-covariance matrix of each cluster
     """
-    clusters = create_clusters(data, centroids, max_threads=max_threads)
+    clusters = create_clusters(data, centroids, multithread=multithread)
 
     total_distance_per_cluster = 0
     for clusterIndex, cluster in clusters.items():
@@ -53,26 +50,25 @@ def banfeld_raferty(data, centroids, max_threads=10):
 
 def dist_from_one_to_all(dp, dp_list):
     """
+    Find the distance from the data point to all data points in the list
 
-    :param dp:
-    :param dp_list:
+    :param dp: Single Data point
+    :param dp_list: List of data points
     :return: list containing the distance from dp to all points in dp_list
     """
     return [dp.distance(list_point) for list_point in dp_list]
 
 
-def c_index(data, centroids, max_threads=10):
+def c_index(data, centroids, multithread=True):
     """
     C-Index
 
-    Measure of Compactness
-
-    :param data:
-    :param centroids:
-    :param max_threads:
-    :return:
+    :param data: list of all data points as vectors
+    :param centroids: List of all centroids (Vectors)
+    :param multithread: when true, multithread the algorithm with the suggested number of threads
+    :return: Measure of Compactness
     """
-    clusters = create_clusters(data, centroids, max_threads=max_threads)
+    clusters = create_clusters(data, centroids, multithread=multithread)
 
     total_sum = 0.0
     total_members = 0
