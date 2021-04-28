@@ -109,6 +109,7 @@ class Vector:
             for var in self.__slots__:
                 if getattr(self, var) is not None and getattr(other, var) is not None:
                     sum += (getattr(self, var) - getattr(other, var))**2
+
             return sqrt(sum)
 
 
