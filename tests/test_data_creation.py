@@ -54,17 +54,17 @@ class TestDataSetCreation(TestCase):
     #
     #     print("Finished Centroids")
     #
-    #     metric = ball_hall(data, centroids)
-    #     print("Ball Hall Metric = {}".format(metric))
-    #
-    #     metric = banfeld_raferty(data, centroids)
-    #     print("Banfeld Raferty Metric = {}".format(metric))
+    #     # metric = ball_hall(data, centroids)
+    #     # print("Ball Hall Metric = {}".format(metric))
+    #     #
+    #     # metric = banfeld_raferty(data, centroids)
+    #     # print("Banfeld Raferty Metric = {}".format(metric))
     #
     #     metric = c_index(data, centroids)
     #     print("C Index Metric = {}".format(metric))
     #
-    #     metric = xie_beni(data, centroids)
-    #     print("Xie Beni Metric = {}".format(metric))
+    #     # metric = xie_beni(data, centroids)
+    #     # print("Xie Beni Metric = {}".format(metric))
 
     def test_3_small_data_set_creation(self):
         """
@@ -77,26 +77,17 @@ class TestDataSetCreation(TestCase):
 
         clusters = create_clusters(small_data, centroids, multithread=True)
 
-        # for x, y in clusters.items():
-        #     print(f"====== {x} =====")
-        #     for _ in y:
-        #         print(f"\t{str(_)}")
-        #
-        # print(f"seed = {seed}")
-
-        # print("Finished Centroids")
-
         metric = ball_hall(small_data, centroids)
         print("Ball Hall Metric = {}".format(metric))
 
         metric = banfeld_raferty(small_data, centroids)
         print("Banfeld Raferty Metric = {}".format(metric))
-        #
-        # metric = c_index(small_data, centroids)
-        # print("C Index Metric = {}".format(metric))
-        #
-        # metric = xie_beni(small_data, centroids)
-        # print("Xie Beni Metric = {}".format(metric))
+
+        metric = c_index(small_data, centroids)
+        print("C Index Metric = {}".format(metric))
+
+        metric = xie_beni(small_data, centroids)
+        print("Xie Beni Metric = {}".format(metric))
 
         metric = calinski_harabasz(small_data, centroids)
         print("Calinski Harabasz Metric = {}".format(metric))

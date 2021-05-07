@@ -5,6 +5,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from .. import __MAX_THREADS
 
 
+nw = lambda nk : (nk * (nk -1)) / 2
+nt = lambda n : (n * (n-1)) / 2
+
+
 def BGSS(data, clusters):
     """
     Sum of the weighted sum of the squared distances between G_k and G, where G_k
@@ -113,7 +117,7 @@ def pairwise_distance(data, multithread=True):
         futr_dists = {executor.submit(dist_from_one_to_all, data[i], data[i + 1:]):
                           i for i in range(len(data) - 1)}
         for futr in as_completed(futr_dists):
-            total_data_dists.append(futr.result()[0])
+            total_data_dists.extend(futr.result())
 
     return total_data_dists
 
@@ -129,37 +133,23 @@ def c_index(data, centroids, multithread=True):
     """
     clusters = create_clusters(data, centroids, multithread=multithread)
 
-    total_sum = 0.0
-    total_members = 0
-
-    num_threads = __MAX_THREADS if multithread else 1
-
+    sw = 0
+    _nw = 0
     for clusterIndex, cluster in clusters.items():
+        c_pdist = pairwise_distance(cluster, multithread=multithread)
+        sw += sum(c_pdist)
+        _nw += int(nw(len(cluster)))
 
-        cluster_dists = []
-        with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            futr_dists = {executor.submit(dist_from_one_to_all, cluster[i], cluster[i+1:]):
-                              i for i in range(len(cluster)-1)}
-            for futr in as_completed(futr_dists):
-                cluster_dists.append(futr.result()[0])
+    pdists = pairwise_distance(data, multithread=multithread)
+    s_pdists = sorted(pdists)
+    s_min = sum(s_pdists[0:_nw])
+    s_max = sum(s_pdists[::-1][0:_nw])
 
-        total_sum += sum(cluster_dists)
-        total_members += len(cluster_dists)
-
-    # Perform the same calculation that was performed on each cluster on
-    # the entire list of data
-    total_data_dists = []
-    with ThreadPoolExecutor(max_workers=num_threads) as executor:
-        futr_dists = {executor.submit(dist_from_one_to_all, data[i], data[i + 1:]):
-                          i for i in range(len(data) - 1)}
-        for futr in as_completed(futr_dists):
-            total_data_dists.append(futr.result()[0])
-
-    sorted_distances = sorted(total_data_dists)
-    sum_min_dists = sum(sorted_distances[0:total_members])
-    sum_max_dists = sum(sorted_distances[::-1][0:total_members])
-
-    return (total_sum-sum_min_dists) / (sum_max_dists-sum_min_dists)
+    try:
+        return (sw - s_min) / (s_max - s_min)
+    except ZeroDivisionError:
+        # C-Index is min acceptable, so instead of 0 return max value
+        return float('inf')
 
 
 def xie_beni(data, centroids, multithread=True):
@@ -186,7 +176,7 @@ def xie_beni(data, centroids, multithread=True):
     total_dists_to_center = sum(all_distances_to_center)
     min_center_dists = min(pairwise_distance(cluster_means, multithread=multithread))
 
-    return total_dists_to_center / (len(centroids)* (min_center_dists**2))
+    return total_dists_to_center / (len(centroids) * (min_center_dists**2))
 
 
 def calinski_harabasz(data, centroids, multithread=True):
