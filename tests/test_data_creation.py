@@ -1,7 +1,15 @@
 from unittest import TestCase, main
 from cluster.data import DataSet, Vector
 from cluster.algorithm import kmeans_pp
-from cluster.algorithm.metrics import ball_hall, banfeld_raferty, c_index, xie_beni, calinski_harabasz
+from cluster.algorithm.metrics import (
+    ball_hall,
+    banfeld_raftery,
+    c_index,
+    xie_beni,
+    calinski_harabasz,
+    log_ss_ratio,
+    trace_w
+)
 from cluster.algorithm.kmeans import create_clusters
 from random import uniform, randint
 from os import remove
@@ -57,8 +65,8 @@ class TestDataSetCreation(TestCase):
     #     # metric = ball_hall(data, centroids)
     #     # print("Ball Hall Metric = {}".format(metric))
     #     #
-    #     # metric = banfeld_raferty(data, centroids)
-    #     # print("Banfeld Raferty Metric = {}".format(metric))
+    #     # metric = banfeld_raftery(data, centroids)
+    #     # print("Banfeld Raftery Metric = {}".format(metric))
     #
     #     metric = c_index(data, centroids)
     #     print("C Index Metric = {}".format(metric))
@@ -77,11 +85,11 @@ class TestDataSetCreation(TestCase):
 
         clusters = create_clusters(small_data, centroids, multithread=True)
 
-        metric = ball_hall(small_data, centroids)
+        metric = ball_hall(small_data, centroids=centroids, clusters=clusters)
         print("Ball Hall Metric = {}".format(metric))
 
-        metric = banfeld_raferty(small_data, centroids)
-        print("Banfeld Raferty Metric = {}".format(metric))
+        metric = banfeld_raftery(small_data, centroids=centroids, clusters=clusters)
+        print("Banfeld Raftery Metric = {}".format(metric))
 
         metric = c_index(small_data, centroids)
         print("C Index Metric = {}".format(metric))
@@ -91,6 +99,12 @@ class TestDataSetCreation(TestCase):
 
         metric = calinski_harabasz(small_data, centroids)
         print("Calinski Harabasz Metric = {}".format(metric))
+
+        metric = log_ss_ratio(small_data, centroids)
+        print("LOG SS Ratio Metric = {}".format(metric))
+
+        metric = trace_w(small_data, centroids)
+        print("Trace W Metric = {}".format(metric))
 
 
 
