@@ -91,19 +91,19 @@ class TestDataSetCreation(TestCase):
         metric = banfeld_raftery(small_data, centroids=centroids, clusters=clusters)
         print("Banfeld Raftery Metric = {}".format(metric))
 
-        metric = c_index(small_data, centroids)
+        metric = c_index(small_data, centroids=centroids)
         print("C Index Metric = {}".format(metric))
 
-        metric = xie_beni(small_data, centroids)
+        metric = xie_beni(small_data, centroids=centroids)
         print("Xie Beni Metric = {}".format(metric))
 
-        metric = calinski_harabasz(small_data, centroids)
+        metric = calinski_harabasz(small_data, centroids=centroids)
         print("Calinski Harabasz Metric = {}".format(metric))
 
-        metric = log_ss_ratio(small_data, centroids)
+        metric = log_ss_ratio(small_data, centroids=centroids)
         print("LOG SS Ratio Metric = {}".format(metric))
 
-        metric = trace_w(small_data, centroids)
+        metric = trace_w(small_data, centroids=centroids)
         print("Trace W Metric = {}".format(metric))
 
 

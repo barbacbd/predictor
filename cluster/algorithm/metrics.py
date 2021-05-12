@@ -91,7 +91,8 @@ def ball_hall(data, *args, **kwargs):
         see below
 
     :keyword arguments:
-        * *centroids* (``dict``) --
+        * *centroids* (``list``) --
+          List of all centroids (Vectors)
 
         * *clusters* (``dict``) --
           When present, ignore centroids. The clusters is a dictionary of cluster index to the
@@ -129,7 +130,8 @@ def banfeld_raftery(data, *args, **kwargs):
         see below
 
     :keyword arguments:
-        * *centroids* (``dict``) --
+        * *centroids* (``list``) --
+          List of all centroids (Vectors)
 
         * *clusters* (``dict``) --
           When present, ignore centroids. The clusters is a dictionary of cluster index to the
@@ -161,16 +163,36 @@ def banfeld_raftery(data, *args, **kwargs):
     return total_distance_per_cluster
 
 
-def c_index(data, centroids, multithread=True):
+def c_index(data, *args, **kwargs):
     """
     C-Index
 
     :param data: list of all data points as vectors
-    :param centroids: List of all centroids (Vectors)
-    :param multithread: when true, multithread the algorithm with the suggested number of threads
+    :param \**kwargs:
+        see below
+
+    :keyword arguments:
+        * *centroids* (``list``) --
+          List of all centroids (Vectors)
+
+        * *clusters* (``dict``) --
+          When present, ignore centroids. The clusters is a dictionary of cluster index to the
+          list of Vectors in the cluster.
+
+        * *multithread* (``bool``) --
+          When True [default], multithread the algorithm using a suggested number of threads
+
     :return: Measure of Compactness
     """
-    clusters = create_clusters(data, centroids, multithread=multithread)
+    multithread = kwargs.get("multithread", True)
+
+    if "clusters" in kwargs:
+        clusters = kwargs.get("clusters")
+    else:
+        if "centroids" in kwargs:
+            clusters = create_clusters(data, kwargs.get("centroids"), multithread=multithread)
+        else:
+            return float('inf')  # C-Index is min acceptable, so instead of 0 return max value
 
     sw = 0
     _nw = 0
@@ -191,23 +213,65 @@ def c_index(data, centroids, multithread=True):
         return float('inf')
 
 
-def calinski_harabasz(data, centroids, multithread=True):
+def calinski_harabasz(data, *args, **kwargs):
     """
+    Calinski-Harabasz Index
 
     :param data: list of all data points as vectors
-    :param centroids: List of all centroids (Vectors)
-    :param multithread: when true, multithread the algorithm with the suggested number of threads
+    :param \**kwargs:
+        see below
+
+    :keyword arguments:
+        * *centroids* (``list``) --
+          List of all centroids (Vectors)
+
+        * *clusters* (``dict``) --
+          When present, ignore centroids. The clusters is a dictionary of cluster index to the
+          list of Vectors in the cluster.
+
+        * *multithread* (``bool``) --
+          When True [default], multithread the algorithm using a suggested number of threads
+
+        * *k* (``uint``) --
+          Number of centroids 
+        
+        * *bgss* (``float``) -- 
+          See BGSS function above for details
+        
+        * *wgss* (``float``) --
+          See WGSS function above for details
+
     :return:
     """
-    clusters = create_clusters(data, centroids, multithread=multithread)
+    multithread = kwargs.get("multithread", True)
 
-    k = len(centroids)
     n = len(data)
+    bgss = kwargs.get("bgss", None)
+    wgss = kwargs.get("wgss", None)
+    k = kwargs.get("k", None)
+    clusters = kwargs.get("clusters", None)
+    centroids = kwargs.get("centroids", None)
 
-    return ((n-k)/(k-1)) * (BGSS(data, clusters)/WGSS(clusters))
+    if None not in (bgss, wgss, k, clusters):
+        return ((n-k)/(k-1)) * (bgss/wgss)
+    elif None not in (clusters, k):
+        return ((n-k)/(k-1)) * (BGSS(data, clusters)/WGSS(clusters))
+    else:
+        if clusters is None:
+            if centroids is not None:
+                if not k:
+                    k = len(centroids)
+                clusters = create_clusters(data, centroids, multithread=multithread)
+            else:
+                return -float('inf')  # CH looks for max, return min
+        
+        if k is None:
+            k = len(centroids)
+
+        return ((n-k)/(k-1)) * (BGSS(data, clusters)/WGSS(clusters))
 
 
-def davies_bouldin(data, centroids, multithread=True):
+def davies_bouldin(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
@@ -218,7 +282,7 @@ def davies_bouldin(data, centroids, multithread=True):
     clusters = create_clusters(data, centroids, multithread=multithread)
 
 
-def det_ratio(data, centroids, multithread=True):
+def det_ratio(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
@@ -229,7 +293,7 @@ def det_ratio(data, centroids, multithread=True):
     clusters = create_clusters(data, centroids, multithread=multithread)
 
 
-def dunn(data, centroids, multithread=True):
+def dunn(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
@@ -240,7 +304,7 @@ def dunn(data, centroids, multithread=True):
     clusters = create_clusters(data, centroids, multithread=multithread)
 
 
-def baker_hubert_gamma(data, centroids, multithread=True):
+def baker_hubert_gamma(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
@@ -251,7 +315,7 @@ def baker_hubert_gamma(data, centroids, multithread=True):
     clusters = create_clusters(data, centroids, multithread=multithread)
 
 
-def gdi(data, centroids, multithread=True):
+def gdi(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
@@ -262,7 +326,7 @@ def gdi(data, centroids, multithread=True):
     clusters = create_clusters(data, centroids, multithread=multithread)
 
 
-def g_plus(data, centroids, multithread=True):
+def g_plus(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
@@ -273,7 +337,7 @@ def g_plus(data, centroids, multithread=True):
     clusters = create_clusters(data, centroids, multithread=multithread)
 
 
-def ksq_detw(data, centroids, multithread=True):
+def ksq_detw(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
@@ -284,7 +348,7 @@ def ksq_detw(data, centroids, multithread=True):
     clusters = create_clusters(data, centroids, multithread=multithread)
 
 
-def log_det_ratio(data, centroids, multithread=True):
+def log_det_ratio(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
@@ -295,19 +359,55 @@ def log_det_ratio(data, centroids, multithread=True):
     clusters = create_clusters(data, centroids, multithread=multithread)
 
 
-def log_ss_ratio(data, centroids, multithread=True):
+def log_ss_ratio(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
-    :param centroids: List of all centroids (Vectors)
-    :param multithread: when true, multithread the algorithm with the suggested number of threads
+    :param \**kwargs:
+        see below
+
+    :keyword arguments:
+        * *centroids* (``list``) --
+          List of all centroids (Vectors)
+
+        * *clusters* (``dict``) --
+          When present, ignore centroids. The clusters is a dictionary of cluster index to the
+          list of Vectors in the cluster.
+
+        * *multithread* (``bool``) --
+          When True [default], multithread the algorithm using a suggested number of threads
+
+        * *bgss* (``float``) -- 
+          See BGSS function above for details
+        
+        * *wgss* (``float``) --
+          See WGSS function above for details
+
     :return:
     """
-    clusters = create_clusters(data, centroids, multithread=multithread)
+    multithread = kwargs.get("multithread", True)
+    bgss = kwargs.get("bgss", None)
+    wgss = kwargs.get("wgss", None)
+    clusters = kwargs.get("clusters", None)
+    centroids = kwargs.get("centroids", None)
+
+    if None in (bgss, wgss):
+        if not clusters:
+            if centroids:
+                clusters = create_clusters(data, centroids, multithread=multithread)
+            else:
+                return float('inf')  # opposite of min diff
+        
+        if not bgss:
+            bgss = BGSS(data, clusters)
+        
+        if not wgss:
+            wgss = WGSS(clusters)
+
     return log(BGSS(data, clusters)/WGSS(clusters))
 
 
-def mcclain_rao(data, centroids, multithread=True):
+def mcclain_rao(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
@@ -318,7 +418,7 @@ def mcclain_rao(data, centroids, multithread=True):
     clusters = create_clusters(data, centroids, multithread=multithread)
 
 
-def pbm(data, centroids, multithread=True):
+def pbm(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
@@ -329,7 +429,7 @@ def pbm(data, centroids, multithread=True):
     clusters = create_clusters(data, centroids, multithread=multithread)
 
 
-def point_biserial(data, centroids, multithread=True):
+def point_biserial(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
@@ -340,7 +440,7 @@ def point_biserial(data, centroids, multithread=True):
     clusters = create_clusters(data, centroids, multithread=multithread)
 
 
-def ratkowsky_lance(data, centroids, multithread=True):
+def ratkowsky_lance(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
@@ -351,7 +451,7 @@ def ratkowsky_lance(data, centroids, multithread=True):
     clusters = create_clusters(data, centroids, multithread=multithread)
 
 
-def ray_turi(data, centroids, multithread=True):
+def ray_turi(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
@@ -362,7 +462,7 @@ def ray_turi(data, centroids, multithread=True):
     clusters = create_clusters(data, centroids, multithread=multithread)
 
 
-def scott_symons(data, centroids, multithread=True):
+def scott_symons(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
@@ -373,7 +473,7 @@ def scott_symons(data, centroids, multithread=True):
     clusters = create_clusters(data, centroids, multithread=multithread)
 
 
-def sd(data, centroids, multithread=True):
+def sd(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
@@ -384,7 +484,7 @@ def sd(data, centroids, multithread=True):
     clusters = create_clusters(data, centroids, multithread=multithread)
 
 
-def s_dbw(data, centroids, multithread=True):
+def s_dbw(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
@@ -395,7 +495,7 @@ def s_dbw(data, centroids, multithread=True):
     clusters = create_clusters(data, centroids, multithread=multithread)
 
 
-def silhouette(data, centroids, multithread=True):
+def silhouette(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
@@ -406,7 +506,7 @@ def silhouette(data, centroids, multithread=True):
     clusters = create_clusters(data, centroids, multithread=multithread)
 
 
-def tau(data, centroids, multithread=True):
+def tau(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
@@ -417,7 +517,49 @@ def tau(data, centroids, multithread=True):
     clusters = create_clusters(data, centroids, multithread=multithread)
 
 
-def trace_w(data, centroids, multithread=True):
+def trace_w(data, *args, **kwargs):
+    """
+
+    :param data: list of all data points as vectors
+    :param \**kwargs:
+        see below
+
+    :keyword arguments:
+        * *centroids* (``list``) --
+          List of all centroids (Vectors)
+
+        * *clusters* (``dict``) --
+          When present, ignore centroids. The clusters is a dictionary of cluster index to the
+          list of Vectors in the cluster.
+
+        * *multithread* (``bool``) --
+          When True [default], multithread the algorithm using a suggested number of threads
+
+        * *wgss* (``float``) --
+          See WGSS function above for details
+
+    :return:
+    """
+    multithread = kwargs.get("multithread", True)
+
+    wgss = kwargs.get("wgss", None)
+    if not wgss:
+
+        clusters = kwargs.get("clusters", None)
+        if not clusters:
+
+            centroids = kwargs.get("centroids", None)
+            if not centroids:
+                return -float('inf')
+            
+            clusters = create_clusters(data, centroids, multithread=multithread)
+        
+        wgss = WGSS(clusters)
+    
+    return wgss
+
+
+def trace_wib(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
@@ -426,10 +568,9 @@ def trace_w(data, centroids, multithread=True):
     :return:
     """
     clusters = create_clusters(data, centroids, multithread=multithread)
-    return WGSS(clusters)
 
 
-def trace_wib(data, centroids, multithread=True):
+def wemmert_gancarski(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
@@ -440,27 +581,36 @@ def trace_wib(data, centroids, multithread=True):
     clusters = create_clusters(data, centroids, multithread=multithread)
 
 
-def wemmert_gancarski(data, centroids, multithread=True):
-    """
-
-    :param data: list of all data points as vectors
-    :param centroids: List of all centroids (Vectors)
-    :param multithread: when true, multithread the algorithm with the suggested number of threads
-    :return:
-    """
-    clusters = create_clusters(data, centroids, multithread=multithread)
-
-
-def xie_beni(data, centroids, multithread=True):
+def xie_beni(data, *args, **kwargs):
     """
     Xie-Beni Index
 
     :param data: list of all data points as vectors
-    :param centroids: List of all centroids (Vectors)
-    :param multithread: when true, multithread the algorithm with the suggested number of threads
+    :param \**kwargs:
+        see below
+
+    :keyword arguments:
+        * *centroids* (``list``) --
+          List of all centroids (Vectors)
+
+        * *clusters* (``dict``) --
+          When present, ignore centroids. The clusters is a dictionary of cluster index to the
+          list of Vectors in the cluster.
+
+        * *multithread* (``bool``) --
+          When True [default], multithread the algorithm using a suggested number of threads
+
     :return: Measure of compactness
     """
-    clusters = create_clusters(data, centroids, multithread=multithread)
+    multithread = kwargs.get("multithread", True)
+
+    centroids = kwargs.get("centroids", None)
+    if not centroids:
+        return float('inf')
+
+    clusters = kwargs.get("clusters", None)
+    if not clusters:
+        clusters = create_clusters(data, centroids, multithread=multithread)
 
     cluster_means = []
     all_distances_to_center = []
