@@ -94,7 +94,7 @@ def ball_hall(data, *args, **kwargs):
         * *centroids* (``list``) --
           List of all centroids (Vectors)
 
-        * *clusters* (``dict``) --
+        * *clusters* (``dict``) -- Provide for efficiency
           When present, ignore centroids. The clusters is a dictionary of cluster index to the
           list of Vectors in the cluster.
 
@@ -133,7 +133,7 @@ def banfeld_raftery(data, *args, **kwargs):
         * *centroids* (``list``) --
           List of all centroids (Vectors)
 
-        * *clusters* (``dict``) --
+        * *clusters* (``dict``) -- Provide for efficiency
           When present, ignore centroids. The clusters is a dictionary of cluster index to the
           list of Vectors in the cluster.
 
@@ -175,7 +175,7 @@ def c_index(data, *args, **kwargs):
         * *centroids* (``list``) --
           List of all centroids (Vectors)
 
-        * *clusters* (``dict``) --
+        * *clusters* (``dict``) -- Provide for efficiency
           When present, ignore centroids. The clusters is a dictionary of cluster index to the
           list of Vectors in the cluster.
 
@@ -232,13 +232,13 @@ def calinski_harabasz(data, *args, **kwargs):
         * *multithread* (``bool``) --
           When True [default], multithread the algorithm using a suggested number of threads
 
-        * *k* (``uint``) --
+        * *k* (``uint``) -- Provide for efficiency
           Number of centroids 
         
-        * *bgss* (``float``) -- 
+        * *bgss* (``float``) -- Provide for efficiency
           See BGSS function above for details
         
-        * *wgss* (``float``) --
+        * *wgss* (``float``) -- Provide for efficiency
           See WGSS function above for details
 
     :return:
@@ -255,7 +255,13 @@ def calinski_harabasz(data, *args, **kwargs):
     if None not in (bgss, wgss, k, clusters):
         return ((n-k)/(k-1)) * (bgss/wgss)
     elif None not in (clusters, k):
-        return ((n-k)/(k-1)) * (BGSS(data, clusters)/WGSS(clusters))
+        if not bgss:
+            bgss = BGSS(data, clusters)
+        
+        if not wgss:
+            wgss = WGSS(clusters)
+    
+        return ((n-k)/(k-1)) * (bgss/wgss)
     else:
         if clusters is None:
             if centroids is not None:
@@ -266,7 +272,10 @@ def calinski_harabasz(data, *args, **kwargs):
                 return -float('inf')  # CH looks for max, return min
         
         if k is None:
-            k = len(centroids)
+            if not centroids:
+                return -float('inf')
+            else:
+                k = len(centroids)
 
         return ((n-k)/(k-1)) * (BGSS(data, clusters)/WGSS(clusters))
 
@@ -377,10 +386,10 @@ def log_ss_ratio(data, *args, **kwargs):
         * *multithread* (``bool``) --
           When True [default], multithread the algorithm using a suggested number of threads
 
-        * *bgss* (``float``) -- 
+        * *bgss* (``float``) -- Provide for efficiency
           See BGSS function above for details
         
-        * *wgss* (``float``) --
+        * *wgss* (``float``) -- Provide for efficiency
           See WGSS function above for details
 
     :return:
@@ -404,7 +413,9 @@ def log_ss_ratio(data, *args, **kwargs):
         if not wgss:
             wgss = WGSS(clusters)
 
-    return log(BGSS(data, clusters)/WGSS(clusters))
+        return log(BGSS(data, clusters)/WGSS(clusters))
+
+    return log(bgss/wgss)
 
 
 def mcclain_rao(data, *args, **kwargs):
@@ -525,10 +536,10 @@ def trace_w(data, *args, **kwargs):
         see below
 
     :keyword arguments:
-        * *centroids* (``list``) --
+        * *centroids* (``list``) -- Required
           List of all centroids (Vectors)
 
-        * *clusters* (``dict``) --
+        * *clusters* (``dict``) -- Provide for efficiency
           When present, ignore centroids. The clusters is a dictionary of cluster index to the
           list of Vectors in the cluster.
 
@@ -590,10 +601,10 @@ def xie_beni(data, *args, **kwargs):
         see below
 
     :keyword arguments:
-        * *centroids* (``list``) --
+        * *centroids* (``list``) -- Required
           List of all centroids (Vectors)
 
-        * *clusters* (``dict``) --
+        * *clusters* (``dict``) -- Provide for efficiency
           When present, ignore centroids. The clusters is a dictionary of cluster index to the
           list of Vectors in the cluster.
 

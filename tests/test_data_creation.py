@@ -8,7 +8,9 @@ from cluster.algorithm.metrics import (
     xie_beni,
     calinski_harabasz,
     log_ss_ratio,
-    trace_w
+    trace_w,
+    WGSS,
+    BGSS
 )
 from cluster.algorithm.kmeans import create_clusters
 from random import uniform, randint
@@ -84,26 +86,68 @@ class TestDataSetCreation(TestCase):
         centroids, seed = kmeans_pp(data=small_data, k=3, seed=6)
 
         clusters = create_clusters(small_data, centroids, multithread=True)
-
-        metric = ball_hall(small_data, centroids=centroids, clusters=clusters)
+        bgss = BGSS(small_data, clusters)
+        wgss = WGSS(clusters)
+        
+        metric = ball_hall(small_data, centroids=centroids)
+        print("Ball Hall Metric = {}".format(metric))
+        metric = ball_hall(small_data, clusters=clusters)
         print("Ball Hall Metric = {}".format(metric))
 
-        metric = banfeld_raftery(small_data, centroids=centroids, clusters=clusters)
+        metric = banfeld_raftery(small_data, centroids=centroids)
+        print("Banfeld Raftery Metric = {}".format(metric))
+        metric = banfeld_raftery(small_data, clusters=clusters)
         print("Banfeld Raftery Metric = {}".format(metric))
 
         metric = c_index(small_data, centroids=centroids)
         print("C Index Metric = {}".format(metric))
+        metric = c_index(small_data, clusters=clusters)
+        print("C Index Metric = {}".format(metric))
 
         metric = xie_beni(small_data, centroids=centroids)
+        print("Xie Beni Metric = {}".format(metric))
+        metric = xie_beni(small_data, clusters=clusters, centroids=centroids)
         print("Xie Beni Metric = {}".format(metric))
 
         metric = calinski_harabasz(small_data, centroids=centroids)
         print("Calinski Harabasz Metric = {}".format(metric))
+        metric = calinski_harabasz(small_data, centroids=centroids, clusters=clusters)
+        print("Calinski Harabasz Metric = {}".format(metric))
+        metric = calinski_harabasz(small_data, centroids=centroids, wgss=wgss)
+        print("Calinski Harabasz Metric = {}".format(metric))
+        metric = calinski_harabasz(small_data, centroids=centroids, clusters=clusters, wgss=wgss)
+        print("Calinski Harabasz Metric = {}".format(metric))
+        metric = calinski_harabasz(small_data, centroids=centroids, bgss=bgss, wgss=wgss)
+        print("Calinski Harabasz Metric = {}".format(metric))
+        metric = calinski_harabasz(small_data, centroids=centroids, clusters=clusters, wgss=wgss, bgss=bgss)
+        print("Calinski Harabasz Metric = {}".format(metric))
 
         metric = log_ss_ratio(small_data, centroids=centroids)
         print("LOG SS Ratio Metric = {}".format(metric))
+        metric = log_ss_ratio(small_data, centroids=centroids, clusters=clusters)
+        print("LOG SS Ratio Metric = {}".format(metric))
+        metric = log_ss_ratio(small_data, centroids=centroids, wgss=wgss)
+        print("LOG SS Ratio Metric = {}".format(metric))
+        metric = log_ss_ratio(small_data, centroids=centroids, clusters=clusters, wgss=wgss)
+        print("LOG SS Ratio Metric = {}".format(metric))
+        metric = log_ss_ratio(small_data, wgss=wgss, bgss=bgss)
+        print("LOG SS Ratio Metric = {}".format(metric))
+        metric = log_ss_ratio(small_data, centroids=centroids, bgss=bgss, wgss=wgss)
+        print("LOG SS Ratio Metric = {}".format(metric))
+        metric = log_ss_ratio(small_data, centroids=centroids, clusters=clusters, bgss=bgss, wgss=wgss)
+        print("LOG SS Ratio Metric = {}".format(metric))
 
         metric = trace_w(small_data, centroids=centroids)
+        print("Trace W Metric = {}".format(metric))
+        metric = trace_w(small_data, centroids=centroids, clusters=clusters)
+        print("Trace W Metric = {}".format(metric))
+        metric = trace_w(small_data, clusters=clusters)
+        print("Trace W Metric = {}".format(metric))
+        metric = trace_w(small_data, wgss=wgss)
+        print("Trace W Metric = {}".format(metric))
+        metric = trace_w(small_data, centroids=centroids, wgss=wgss)
+        print("Trace W Metric = {}".format(metric))
+        metric = trace_w(small_data, centroids=centroids, clusters=clusters, wgss=wgss)
         print("Trace W Metric = {}".format(metric))
 
 
