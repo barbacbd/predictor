@@ -63,6 +63,15 @@ def dist_from_one_to_all(dp, dp_list):
     return [dp.distance(list_point) for list_point in dp_list]
 
 
+def find_min_dist_between_clusters(cluster1, other_clusters):
+
+    all_dists = []
+    for dp in cluster1:
+        for oc in other_clusters:
+            all_dists.extend(dist_from_one_to_all(dp, oc))
+    return min(all_dists)
+
+
 def pairwise_distance(data, multithread=True):
     """
 
@@ -80,6 +89,25 @@ def pairwise_distance(data, multithread=True):
             total_data_dists.extend(futr.result())
 
     return total_data_dists
+
+
+def dMin(clusters, multithread=True):
+    num_threads = __MAX_THREADS if multithread else 1
+
+    _clusters = [x for _, x in clusters.items()]
+
+    total_min_data_dists = []
+    with ThreadPoolExecutor(max_workers=num_threads) as executor:
+        futr_dists = {executor.submit(find_min_dist_between_clusters, _clusters[i], _clusters[i+1:]):
+                          i for i in range(len(_clusters) - 1)}
+        for futr in as_completed(futr_dists):
+            total_min_data_dists.append(futr.result())
+
+    return min(total_min_data_dists)
+
+    
+def dMax(clusters, multithread=True):
+    return max([max(pairwise_distance(cluster, multithread=multithread)) for _, cluster in clusters.items()])
 
 
 def ball_hall(data, *args, **kwargs):
@@ -306,11 +334,49 @@ def dunn(data, *args, **kwargs):
     """
 
     :param data: list of all data points as vectors
-    :param centroids: List of all centroids (Vectors)
-    :param multithread: when true, multithread the algorithm with the suggested number of threads
+    :param \**kwargs:
+        see below
+
+    :keyword arguments:
+        * *centroids* (``list``) --
+          List of all centroids (Vectors)
+
+        * *clusters* (``dict``) --
+          When present, ignore centroids. The clusters is a dictionary of cluster index to the
+          list of Vectors in the cluster.
+
+        * *multithread* (``bool``) --
+          When True [default], multithread the algorithm using a suggested number of threads
+
+        * *dmin* (``float``) -- Provide for efficiency
+          min inter-cluster distance
+
+        * *dmax* (``float``) -- Provide for efficiency
+          Max intra-cluster distance
+
     :return:
     """
-    clusters = create_clusters(data, centroids, multithread=multithread)
+    multithread=kwargs.get("multithread", True)
+
+    d_min = kwargs.get("dmin", None)
+    d_max = kwargs.get("dmax", None)
+
+    if None in (d_min, d_max):
+        clusters = kwargs.get("clusters", None)
+        if clusters is None:
+            centroids = kwargs.get("centroids", None)
+            if centroids is None:
+                return -float('inf')
+            else:
+                clusters = create_clusters(data, centroids, multithread=multithread)
+
+        if d_min is None:
+            d_min = dMin(clusters, multithread=multithread)
+
+        if d_max is None:
+            d_max = dMax(clusters, multithread=multithread)
+
+    return d_min / d_max
 
 
 def baker_hubert_gamma(data, *args, **kwargs):

@@ -10,7 +10,10 @@ from cluster.algorithm.metrics import (
     log_ss_ratio,
     trace_w,
     WGSS,
-    BGSS
+    BGSS,
+    dMax,
+    dMin,
+    dunn
 )
 from cluster.algorithm.kmeans import create_clusters
 from random import uniform, randint
@@ -88,6 +91,18 @@ class TestDataSetCreation(TestCase):
         clusters = create_clusters(small_data, centroids, multithread=True)
         bgss = BGSS(small_data, clusters)
         wgss = WGSS(clusters)
+
+
+        # for x, y in clusters.items():
+        #     print(x)
+        #
+        #     for dp in y:
+        #         print(dp)
+
+        d_min = dMin(clusters, multithread=False)
+        d_max = dMax(clusters, multithread=False)
+        print(d_min)
+        print(d_max)
         
         metric = ball_hall(small_data, centroids=centroids)
         print("Ball Hall Metric = {}".format(metric))
@@ -150,7 +165,20 @@ class TestDataSetCreation(TestCase):
         metric = trace_w(small_data, centroids=centroids, clusters=clusters, wgss=wgss)
         print("Trace W Metric = {}".format(metric))
 
-
+        metric = dunn(small_data, centroids=centroids)
+        print("Dunn Metric = {}".format(metric))
+        metric = dunn(small_data, centroids=centroids, clusters=clusters)
+        print("Dunn Metric = {}".format(metric))
+        metric = dunn(small_data, clusters=clusters, dmin=d_min)
+        print("Dunn Metric = {}".format(metric))
+        metric = dunn(small_data, clusters=clusters, dmax=d_max)
+        print("Dunn Metric = {}".format(metric))
+        metric = dunn(small_data, centroids=centroids, dmin=d_min)
+        print("Dunn Metric = {}".format(metric))
+        metric = dunn(small_data, centroids=centroids, dmax=d_max)
+        print("Dunn Metric = {}".format(metric))
+        metric = dunn(small_data, dmin=d_min, dmax=d_max)
+        print("Dunn Metric = {}".format(metric))
 
 
 
