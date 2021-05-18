@@ -1,6 +1,7 @@
 from unittest import TestCase, main
 from cluster.data import DataSet, Vector
 from cluster.algorithm import kmeans_pp
+from cluster.algorithm.helper import WGSS, BGSS, dMax, dMin
 from cluster.algorithm.metrics import (
     ball_hall,
     banfeld_raftery,
@@ -9,10 +10,6 @@ from cluster.algorithm.metrics import (
     calinski_harabasz,
     log_ss_ratio,
     trace_w,
-    WGSS,
-    BGSS,
-    dMax,
-    dMin,
     dunn
 )
 from cluster.algorithm.kmeans import create_clusters
