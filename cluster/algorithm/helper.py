@@ -58,6 +58,14 @@ def dist_from_one_to_all(dp, dp_list):
 
 
 def find_min_dist_between_clusters(cluster1, other_clusters):
+    """
+    Find the minimum distance between clusters. Find the minimum distance
+    between all clusters, and return the minimum of those distances.
+
+    :param cluster1: Cluster to compare to all other clusters
+    :param other_clusters: Rest of the clusters
+    :return: minimum of the minimum distances between clusters
+    """
     all_dists = []
     for dp in cluster1:
         for oc in other_clusters:
@@ -67,10 +75,11 @@ def find_min_dist_between_clusters(cluster1, other_clusters):
 
 def pairwise_distance(data, multithread=True):
     """
+    Find the distance between all pairs of points
 
-    :param data:
-    :param multithread:
-    :return:
+    :param data: list of all data points as Vectors
+    :param multithread: When true, thread the execution
+    :return: List of distances between all points in no particular order
     """
     num_threads = __MAX_THREADS if multithread else 1
 
@@ -85,6 +94,13 @@ def pairwise_distance(data, multithread=True):
 
 
 def dMin(clusters, multithread=True):
+    """
+    Find the minimum of the minimum intracluster distances
+
+    :param clusters: dictionary containing the cluster information
+    :param multithread: When true, thread the execution
+    :return: Min of the min intracluster distances
+    """
     num_threads = __MAX_THREADS if multithread else 1
 
     _clusters = [x for _, x in clusters.items()]
@@ -100,4 +116,11 @@ def dMin(clusters, multithread=True):
 
 
 def dMax(clusters, multithread=True):
+    """
+    Find the maximum intercluster distances for all clusters.
+
+    :param clusters: dictionary containing the cluster information
+    :param multithread: When true, thread the execution
+    :return: Return the max, of the max intercluster distances
+    """
     return max([max(pairwise_distance(cluster, multithread=multithread)) for _, cluster in clusters.items()])
