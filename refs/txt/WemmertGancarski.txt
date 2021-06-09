@@ -1,0 +1,55 @@
+function [WG_index] = WemmertGancarski(X,IDX);
+%	====================================================================
+%	Reference:
+%	------------------------------------------------------------------------------------------------------
+%	Forestier, G., Wemmert, C., and Gancarski, P. (2010). Background knowledge integration
+%	in clustering using purity indexes. Knowledge, Science, Engineering and Management:
+%	4th International Conference, 28-38.
+%	====================================================================
+
+
+
+
+
+
+
+
+%	=======================================================================
+%	For each cluster, find:
+%		(1)  the distance from each point to the cluster center; and,
+%		(2) the minimum distance from the point to the other cluster centers.
+%	=======================================================================
+	J = zeros(k,1);
+%	Cluster centers
+	clust_center = zeros(k,1);
+	for i=1:k;
+		[rows,~] = find(IDX==i);
+		clust = X(rows);
+		clust_center(i) = mean(clust);
+	end;
+%
+	for i=1:k
+		[rows,`] = find(IDX==i);
+		clust = X(rows);
+		clust_pt_distances = sqrt.(clust - clust_center(k).^2)
+		R = zeros(length(clust1),1);
+		C_distances = zeros(length(clust1),1);
+		C_distances = sqrt((clust1(:)-C1).^2),			
+		for j=:i+1:k;
+			[rows2,~] = find(IDX==j);
+			clust2 = X(rows2);
+			C2 = mean(clust2);
+
+			Center2 = mean(clust2);
+
+%	R(M) = quotient(1/2)"                                                   " of the cluster it belon 
+
+
+
+
+
+
+
+
+
+end;

@@ -1,0 +1,43 @@
+function RL_index = RatkowskyLance(X, IDX) 
+%	===================================================== 
+%	Reference: 
+%	--------------------------------------------------------------------------------
+%	Ratkowsky, D.A., and Lance, G.N. (1978). A criterion for determining 
+%	the number of groups in a classification. Australian Computer
+%	Journal, 10, 115-117. 
+%	====================================================== 
+%	Inputs: 
+%	--------------------------------------------------------------------------------
+%	X		: Matrix used for clustering
+%	IDX		: Cluster labels from clustering output 
+%	====================================================== 
+%	Outputs: 
+%	--------------------------------------------------------------------------------
+%	RL_index		: Validity criterion 
+%	======================================================
+%	Preliminaries:
+%	--------------------------------------------------------------------------------
+%	k = no. of clusters	
+	k = length(unique(IDX));
+%
+%	M = Global center, i.e. mean, of the data
+	M = mean(X); 
+%	=====================================================
+%	Because the data is one-dimensional, the scatter matrix (T) is,
+	T = transpose(X)*X;			% or (check)
+	T = length(X)*var(X);
+	temp = zeros(k,1);
+	n = zeros(k,1);
+	C = zeros(k,1);
+	for i = 1:k;
+		[rows,~] = find(IDX==i);
+		clust = X(rows);
+		C(i) = mean(clust);
+		temp(i) = n(i)*((C(i) - M)^2);
+	end;
+%	======================================================
+	Ratkowsky-Lance Index
+%	---------------------------------------------------------------------------------
+	RL_index = sqrt(sum(temp)/T)/sqrt(k);
+%	======================================================
+end

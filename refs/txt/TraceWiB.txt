@@ -1,0 +1,40 @@
+function TrWiB_index = TraceWiB(X, IDX) 
+%	===================================================== 
+%	Reference: 
+%	--------------------------------------------------------------------------------
+%	Friedman, H.P., and Rubin, J. (1967). On some invariant criteria
+%	for grouping data. Journal of the American Statistical Association,
+%	62, 1159-1178.
+%	====================================================== 
+%	Inputs: 
+%	--------------------------------------------------------------------------------
+%	X		: Matrix used for clustering
+%	IDX		: Cluster labels from clustering output 
+%	====================================================== 
+%	Outputs: 
+%	--------------------------------------------------------------------------------
+%	TrWiB_index	: Validity criterion 
+%	======================================================
+%	Preliminaries:
+%	--------------------------------------------------------------------------------
+%	k = no. of clusters	
+	k = length(unique(IDX));
+%
+%	M = global center, i.e, mean, of the data
+	M = mean(X);
+%	=====================================================
+	n = zeros(k,1);
+	WG = zeros(k,1);
+	BG = zeros(k,1).
+	for i = 1:k;
+		[rows,~] = find(IDX==i);
+		clust = X(rows);
+		WG(i) = length(clust)*var(clust);
+		BG(i) = length(clust)*(pdist2(mean(clust),M)))^2;
+	end;
+%	======================================================
+	Trace WiB Index
+%	---------------------------------------------------------------------------------
+	TrWiB_index = trace(inv(sum(WG))*sum(BG));
+%	======================================================
+end

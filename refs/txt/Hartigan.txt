@@ -1,0 +1,64 @@
+function S_Dbw_index = Hartigan(X, IDX) 
+%	===================================================== 
+%	Reference: 
+%	--------------------------------------------------------------------------------
+%	Hartigan, J.A. (1975). Clustering algorithms. New York: Wiley 
+%	====================================================== 
+%	Inputs: 
+%	--------------------------------------------------------------------------------
+%	X		: Matrix used for clustering
+%	IDX		: Cluster labels from clustering output 
+%	====================================================== 
+%	Outputs: 
+%	--------------------------------------------------------------------------------
+%	s_Dbw_index	: Validity criterion 
+%	======================================================
+%	Preliminaries:
+%	--------------------------------------------------------------------------------
+%	k = no. of clusters	
+	k = length(unique(IDX));
+%
+%	NT = number of cluster pairs
+	NT = k*(k-1)/2;	
+%	=====================================================
+%	sigma = limit value, equal to the square root of the sum of the 
+%	               norms of the variance vectors of each cluster divided by
+%	               the number of clusters
+%	--------------------------------------------------------------------------------
+	temp = zeros(k,1);
+	G = zeros(k,1);
+	for i = 1:k;
+		[rows,~] = find(IDX==i);
+		clust = X(rows);
+		G(i) = mean(clust);
+		temp(i) = norm(var(clust));
+	end;
+	sigma = sqrt(sum(temp))/k;
+%	======================================================
+%	Find the density of points for each pair of clusters and for the 
+%	midpoint of the clusters
+%	--------------------------------------------------------------------------------
+%	numerator = density of points within a distance of "sigma" from
+%	the midpoint of each two combined clusters (k and k')
+	numerator = zeros(NT,1);
+%	denominator = maximum of density of points within a distance of
+%	"sigma" from each cluster center for the combined cluster ([k k'])
+	denominator = zeros(NT,1)
+ 	for i = 1:k;
+		[rows1,~] = find(IDX==i);
+		clust1 = X(rows1);		% cluster k
+	end;
+		for j = i+1:k;
+		[rows2,~] = find(IDX==j);
+		clust2 = X(rows2);		% cluster k'
+		joint_clust = [clust1 clust2]	% "joint" cluster
+		H = mean(joint_clust);
+		
+		end;			
+
+
+	K-squared Determinant-W Index
+%	---------------------------------------------------------------------------------
+	KsqDetW_index = k^2*det(sum(temp));
+%	======================================================
+end

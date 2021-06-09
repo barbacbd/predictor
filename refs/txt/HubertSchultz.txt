@@ -1,0 +1,31 @@
+function [C_index] = HubertSchultz(k, X, IDX);
+
+% Hubert, L., and Schultz, J. (1976). Quadratic assignment as a general data-analysis
+% strategy. British Journal of Mathemeatical and Statistical Psychologie, 29, 190-241.
+
+NW = 0;
+for i = 1:k;
+	n(i) = length(find(IDX(:)==i));
+	NW = NW + n(i)*(n(i) - 1)/2;
+end;
+
+% SW = sum of the NW distances between all pairs of points inside each cluster
+SW = 0;
+for i = 1:k;
+	[rows,~] = find(IDX(:)==i);
+	clust_distances = sum(pdist(X(rows)));     
+	SW = SW + clust_distances;
+end;
+
+% Smin = Sum of the NW smallest distances between all pairs of points in the dataset
+all_distances = sort (pdist(X));			% distances sorted in ascending order
+Smin = sum(all_distances(1:NW);
+
+% Smax = Sum of the NW largest distances between all pairs of points in the dataset
+all_distances = sort (all_distances, 'descend');	% distances sorted in descending order
+Smax = sum(all_distances(1:NW);
+
+% C index
+C_index = (SW - Smin)/(Smax - Smin);
+
+end;

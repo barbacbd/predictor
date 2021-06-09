@@ -1,0 +1,15 @@
+function [BR_index] = BanfieldRaftery(k, IDX, sumd);
+
+% Banfield, J.D., and Raftery, A.E. (1993). Model-based gaussian and non-gaussian clustering.
+% Biometrics, 49, 803-821.
+
+total = 0;
+for i=1:k;
+     n(i) = length(find(IDX(:)==i));
+     total = total + n(i)*log(sumd(i)/n(i));
+end;
+
+% Banfield-Raftery index
+BR_index = total;
+
+end;

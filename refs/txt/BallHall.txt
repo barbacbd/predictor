@@ -1,0 +1,15 @@
+function [BH_index] = BallHall(k, IDX, sumd);
+
+% Ball, G.H., and Hall, D.J. (1965). Isodata: A novel method of data analysis and pattern classification.
+% Menlo Park: Stanford Research Institute. (NTIS No. AD 699616).
+
+temp = 0;
+for i=1:k;
+	subtotal = length(find(IDX(:)==i)) *sumd(i);
+	total = temp + subtotal;
+end;
+
+% Ball-Hall index
+BH_index = total/k;
+
+end;
