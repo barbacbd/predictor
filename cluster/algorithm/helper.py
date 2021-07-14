@@ -124,3 +124,46 @@ def dMax(clusters, multithread=True):
     :return: Return the max, of the max intercluster distances
     """
     return max([max(pairwise_distance(cluster, multithread=multithread)) for _, cluster in clusters.items()])
+
+
+def det(matrix):
+    """
+    Determinant for the matrix. Recursive function where the base case is a
+    1x1 matrix (or a single element)
+
+    :param matrix:
+    :return: Determinant of the matrix
+    """
+    # determinant is only calculated for square matrices
+    row_len_set = set()
+    if isinstance(matrix, list):
+        row_len_set.add(len(matrix))
+        for x in matrix:
+            if isinstance(x, list):
+                row_len_set.add(len(x))
+            else:
+                row_len_set.add(-1)
+
+    if len(row_len_set) != 1 or -1 in row_len_set:
+        return 0
+
+    if len(matrix) == 1:
+        # technically we should only allow a single element
+        # but we will just return the first element
+        return matrix[0][0]
+
+    sum = 0
+
+    # grab the top row from the matrix
+    for column, row in enumerate(matrix[0]):
+
+        # alternate signs following a pattern like +-+-+- ...
+        sign = 1 if column % 2 == 0 else -1
+
+        # remove the first row and first column, shrinks the matrix by 1 element in each direction
+        sub_det = [sub_mat[:column] + sub_mat[column + 1:] for sub_mat in matrix[1:]]
+
+        sum += sign * row * det(sub_det)
+
+    return sum
+

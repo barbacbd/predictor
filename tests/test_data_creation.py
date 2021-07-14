@@ -1,7 +1,7 @@
 from unittest import TestCase, main
 from cluster.data import DataSet, Vector
 from cluster.algorithm import kmeans_pp
-from cluster.algorithm.helper import WGSS, BGSS, dMax, dMin
+from cluster.algorithm.helper import WGSS, BGSS, dMax, dMin, det
 from cluster.algorithm.metrics import (
     ball_hall,
     banfeld_raftery,
@@ -177,7 +177,21 @@ class TestDataSetCreation(TestCase):
         metric = dunn(small_data, dmin=d_min, dmax=d_max)
         print("Dunn Metric = {}".format(metric))
 
+    def test_det(self):
+        """
 
+        """
+        matrix = [[1,2,3], [4,5,6], [7,8,9]]
+        print(det(matrix))
+
+        matrix = [[1, 2, 3,4], [5,6,7,8], [9,10,11,12], [13,14,15,16]]
+        print(det(matrix))
+
+        matrix = [[6,1,1], [4,-2,5], [2,8,7]]
+        print(det(matrix))
+
+        matrix = [[1,2,3], [4,5,6]]
+        print(det(matrix))
 
 if __name__ == '__main__':
     main()
