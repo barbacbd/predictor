@@ -413,6 +413,8 @@ def log_det_ratio(data, *args, **kwargs):
 
     :return: Measure of Compactness
     """
+    metric = det_ratio(data, **kwargs)
+    return len(data) * log(metric)
 
 
 def log_ss_ratio(data, *args, **kwargs):
@@ -459,8 +461,6 @@ def log_ss_ratio(data, *args, **kwargs):
         
         if not wgss:
             wgss = WGSS(clusters)
-
-        return log(BGSS(data, clusters)/WGSS(clusters))
 
     return log(bgss/wgss)
 
