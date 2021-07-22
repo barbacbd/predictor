@@ -1,7 +1,10 @@
 from collections import defaultdict
 from numpy import unique, mean
-from scipy.spatial.distance import euclidean, pdist
+import numpy
+from scipy.spatial.distance import euclidean, pdist, cdist
 from math import log
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from . import __MAX_THREADS
 
 
 class Metric:
@@ -172,4 +175,34 @@ class Metric:
 
         return ((N-K) * self._bgss) / ((K-1) * self._wgss)
 
+    def DaviesBouldin(self):
+        """
 
+        :return:
+        """
+
+    def DetRatio(self):
+        """
+
+        :return:
+        """
+
+    def DunnIndex(self):
+        """
+
+        :return:
+        """
+        # Denote dMin as the minimal distance between points of different clusters
+        # TODO Can we batch thread this ? -- sure we can !
+        min_cdists = numpy.ndarray()
+        enumerated_clusters = list(self.clusters.values())
+        for i in range(len(enumerated_clusters) - 1):
+            for j in range(i+1, len(enumerated_clusters) - 1):
+                numpy.append(min_cdists, numpy.min(cdist(enumerated_clusters[i], enumerated_clusters[j])))
+        d_min = numpy.min(min_cdists)
+
+        # Denote dMax as the largest within cluster distance
+        self._wgss_k_all()
+        d_max = max(list(self.cluster_dispersion.values()))
+
+        return d_min / d_max
