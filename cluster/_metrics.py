@@ -1,19 +1,19 @@
-from collections import defaultdict
 from numpy import unique, mean
 import numpy
 from scipy.spatial.distance import euclidean, pdist, cdist
 from math import log
-from concurrent.futures import ThreadPoolExecutor, as_completed
+# from concurrent.futures import ThreadPoolExecutor, as_completed
 from . import __MAX_THREADS
+from ._io import read_data_file
+from sklearn.cluster import k_means
 
 
 class Metric:
 
-    def __init__(self, data, clusters, labels):
+    def __init__(self, data, labels):
         """
 
         :param data:
-        :param clusters:
         :param labels:
         """
         self.data = data
@@ -206,3 +206,45 @@ class Metric:
         d_max = max(list(self.cluster_dispersion.values()))
 
         return d_min / d_max
+
+
+class _ConvenientMetric(Metric):
+
+    def __init__(self, filename, *args, **kwargs):
+        """
+
+        :param filename: full file path and name of the file
+
+        :param \**kwargs:
+            see below
+
+        :keyword arguments:
+            * *delimiter* (``string``) --
+              Separation character for the data file.
+
+            * *num_columns* (``int``) --
+              Number of columns to separate data by, dimensions of the data points
+
+            * *num_clusters* (``int``) --
+              See sklearn.cluster.k_means
+
+            * *random_state* (``int``) --
+              See sklearn.cluster.k_means
+              None, or int
+
+            * *init* (``string``) --
+              See sklearn.cluster.k_means
+              k-means++, random
+        """
+        delim = kwargs.get('delimiter', ' ')
+        num_columns = kwargs.get('num_columns', 1)
+        npdata = read_data_file(filename, delimiter=delim, num_columns=num_columns)
+
+        centroids, matching_clusters, weighted_sum_to_centroids = k_means(
+            npdata,
+            kwargs.get('num_clusters', 3),
+            random_state=kwargs.get('random_state', None),
+            init=kwargs.get('init', 'k-means++')
+        )
+
+        super(_ConvenientMetric, self).__init__(npdata, matching_clusters)

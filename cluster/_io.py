@@ -14,7 +14,12 @@ def read_data_file(filename, delimiter=' ', num_columns=1):
 
     :return: N-D Array
     """
-    nd_arr = loadtxt(filename, delimiter=delimiter, dtype={'formats': (float,) * num_columns})
+    if num_columns > 1:
+        nd_arr = loadtxt(filename, delimiter=delimiter, dtype={'formats': (float,) * num_columns})
+    elif num_columns == 1:
+        nd_arr = loadtxt(filename, delimiter=delimiter)
+    else:
+        raise ValueError
 
     try:
         num_rows, num_cols = nd_arr.shape
