@@ -29,6 +29,8 @@ class Metric:
         self._bgss = None
         self.cluster_dispersion = {}
         self._pdist_value = None
+        self.cluster_similarities = {}
+        self.cluster_centers = {}
 
     def _pdist(self):
         if not self._pdist_value:
@@ -107,6 +109,21 @@ class Metric:
         else:
             self._wgss = Metric.WGSS(self.clusters)
 
+    @staticmethod
+    def cluster_similarities(cluster, center):
+        """
+        """
+        return sum(euclidean(x, center) for x in cluster)
+    
+    def _cluster_similarities(self):
+        """
+        """
+        if not self.cluster_distances:
+            for cluster_id, cluster_data in self.clusters.items():
+                cluster_center = mean(cluster_data)
+                self.cluster_centers[cluster_id] = cluster_center
+                self.cluster_similarities[cluster_id] = Metric.cluster_dispersion(cluster_data, cluster_center)
+            
     def BallHall(self):
         """
         Ball-Hall Index Metric
@@ -180,6 +197,21 @@ class Metric:
 
         :return:
         """
+        self._cluster_similarities()
+
+        total_sims = []
+        for cluster_id in self.cluster_similarities:
+            
+            mk = []
+            for other_cluster_id in set(self.cluster_similarities.keys()) - set([cluster_id]):
+                mk.append(
+                    (self.cluster_similarities[cluster_id]/len(self.clusters[cluster_id]) + 
+                    self.cluster_similarities[other_cluster_id]/len(self.clusters[other_cluster_id])) /
+                    euclidean(self.cluster_centers(cluster_id), self.cluster_centers[other_cluster_id])
+                )
+            total_sims.append(max(mk))
+        
+        return sum(total_sims) / len(self.clusters)
 
     def DetRatio(self):
         """
@@ -206,6 +238,128 @@ class Metric:
         d_max = max(list(self.cluster_dispersion.values()))
 
         return d_min / d_max
+
+    def BakerHubertGamma(self):
+        """
+        """
+        pass
+
+    def GDI(self):
+        """
+        Generalized Dunn's Indices
+        
+        """
+        pass
+
+    def GPlus(self):
+        """
+        """
+        pass
+
+    def KsqDetW(self):
+        """
+        """
+        pass
+
+    def LogDetRatio(self):
+        """
+        """
+        return len(self.data) * log(self.DetRatio())
+
+    def LogSSRatio(self):
+        """
+
+        :return:
+        """
+        self._WGSS()
+        self._BGSS()
+        return log(self._bgss/self._wgss)
+
+    def McClainRao(self):
+        """
+        """
+        pass
+
+    def PBM(self):
+        """
+        """
+        pass
+
+    def PointBiserial(self):
+        """
+        """
+        pass
+
+    def RatkowskyLance(self):
+        """
+        """
+        pass
+
+    def RayTuri(self):
+        """
+        """
+        pass
+
+    def ScottSymons(self):
+        """
+        """
+        pass
+
+    def SD(self):
+        """
+        """
+        pass
+
+    def SDbw(self):
+        """
+        """
+        pass
+
+    def Silhouette(self):
+        """
+        """
+        pass
+
+    def Tau(self):
+        """
+        """
+        pass
+
+    def TraceW(self):
+        """
+
+        :return:
+        """
+        self._WGSS()
+        return self._wgss
+
+    def TraceWiB(self):
+        """
+        """
+        pass
+
+    def WemmertGarcarski(self):
+        """
+        """
+        pass
+
+    def xie_beni(self):
+        """
+        Xie-Beni Index
+
+           1                    WGSS
+          --- * ------------------------------------
+           N    min distance between cluster centers
+
+        :return: Measure of compactness
+        """
+        self._WGSS()
+        N = len(self.clusters)
+
+        # find the minimum distance between all cluster centers
+        min_dist_between_centers = min(pdist([mean(c) for _, c in self.clusters]))
+
+        return self._wgss / (len(self.clusters) * (min_dist_between_centers**2))
 
 
 class _ConvenientMetric(Metric):
