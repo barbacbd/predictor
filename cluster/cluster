@@ -17,7 +17,55 @@ from rpy2.robjects import numpy2ri
 from rpy2.robjects.vectors import StrVector
 from codecs import open as copen
 
+
+def createArgs():
+    """
+    Function to stow away the information for arguments
+    
+    :return: argparse.ArgumentParser
+    """
+    parser = argparse.ArgumentParser(
+        description="Read in files containing data points and execute a set of metrics on the dataset."
+    )
+    parser.add_argument(
+        "--file",
+        type=str,
+        help="File that will be read in, and a dataset will be made out of the data."
+             "The data should NOT include headers for rows or columns."
+    )    
+    parser.add_argument(
+        "-k", "--clusters",
+        type=int,
+        nargs='+',
+        help="List of the number of clusters. The first index in the list is the lower"
+             " limit number of clusters, while the second is upper limit."
+             " For instance: --clusters 3 10 would run the algorithm on all clusters"
+             " in the range of 3 to 10."
+             " <1 will be ignored and lists of length 0 are ignored, lists of length 1"
+             "indicates that the upper and lower limit are the same."
+    )
+    parser.add_argument(
+        "--init",
+        type=str,
+        choices=['k-means++', 'random'],
+        default='k-means++',
+        help="When present, this option inidcates the use of kmeans vs kmeans++ (default)."
+    )
+    return parser
+
+
 def readData(filename):
+    """
+    Attempt to read the data file into a pandas Dataframe.
+    
+    Attempting to decode with encoding:
+        UTF-8
+        UTF-16
+        ascii
+    
+    :param filename: name (including path) to the file
+    :return: pandas DataFrame on success, None otherwise
+    """
 
     data = None
     encodings = ('UTF-8', 'UTF-16', 'ascii')
@@ -41,36 +89,6 @@ def readData(filename):
             data = data.reshape(-1, 1)
 
     return data
-
-
-def readDataFile(filename, delimiter=' ', num_columns=1):
-    """                                                                                                                                                                                                     
-    Positional Arguments                                                                                                                                                                                    
-       : :param filename: Name of the file to read from.                                                                                                                                                    
-                                                                                                                                                                                                            
-    Optional Arguments                                                                                                                                                                                      
-      : :param delimiter: Delimiter that separates the values in the file. The same delimiter                                                                                                               
-        should be used in the file.                                                                                                                                                                         
-      : :param num_columns: Number of columns to separate the data by. All values in the file                                                                                                               
-        are assumed to be floating point numbers.                                                                                                                                                           
-                                                                                                                                                                                                            
-    :return: N-D Array                                                                                                                                                                                      
-    """
-    if num_columns > 1:
-        nd_arr = loadtxt(filename, delimiter=delimiter, dtype={'formats': (float,int,) * num_columns})
-    elif num_columns == 1:
-        nd_arr = loadtxt(filename, delimiter=delimiter)
-    else:
-        raise ValueError
-
-    try:
-        num_rows, num_cols = nd_arr.shape
-    except ValueError as e:
-        # Indicates that there was a bad number of columns (probably empty)                                                                                                                                 
-        # A 1-D array was created, and it must be reshaped for proper use later.                                                                                                                            
-        nd_arr = nd_arr.reshape(-1, 1)
-
-    return nd_arr
 
 
 class Metrics:
@@ -158,43 +176,12 @@ class Metrics:
         return self.execOnData(data_set, mc, k)
 
 
-def createArgs():
-    """
-    Function to stow away the information for arguments
-    """
-    parser = argparse.ArgumentParser(
-        description="Read in files containing data points and execute a set of metrics on the dataset."
-    )
-    parser.add_argument(
-        "--file",
-        type=str,
-        help="File that will be read in, and a dataset will be made out of the data."
-             "The data should NOT include headers for rows or columns."
-    )    
-    parser.add_argument(
-        "-k", "--clusters",
-        type=int,
-        nargs='+',
-        help="List of the number of clusters. The first index in the list is the lower"
-             " limit number of clusters, while the second is upper limit."
-             " For instance: --clusters 3 10 would run the algorithm on all clusters"
-             " in the range of 3 to 10."
-             " <1 will be ignored and lists of length 0 are ignored, lists of length 1"
-             "indicates that the upper and lower limit are the same."
-    )
-    parser.add_argument(
-        "--init",
-        type=str,
-        choices=['k-means++', 'random'],
-        default='k-means++',
-        help="When present, this option inidcates the use of kmeans vs kmeans++ (default)."
-    )
-    return parser
-
-
 def createOutputFile(filename):
     """
+    Given the original filename, create the output excel filename.
+    
     :param filename: input file name 
+    :return: output filename
     """
     # find just the filename
     fn = filename.split("/")[-1]
@@ -206,6 +193,7 @@ def createOutputFile(filename):
         
     # returning the excel spreadsheet name
     return fn + "_analysis.xlsx"
+
 
 def processClusters(clusters):
     """
