@@ -13,10 +13,10 @@ Usage:
 
 Options:
   -k<clusters> --clusters=<clusters> Number of k-means clusters [default: 1]
-  --cols                             Use data as columns
-  --rows                             Use data as rows.
   -n=<num> --num=<num>               Number of Rows or Columns based on type [default: 1]
   -o=<outfile> --output=<outfile>    CSV File to output to [default: output.csv]
+  --cols                             Use data as columns
+  --rows                             Use data as rows.
   --help                             Dsiplay help information
 
 Arguments:
@@ -31,7 +31,9 @@ if (!file.exists(opt$file)) {
 }
 
 # read in the data and convert it to a vector.
-data <- read.table(opt$file, sep="", header=FALSE)
+data <- scan(opt$file, sep="", skipNul=TRUE)
+#data <- table.read(opt$file, sep="", header=FALSE, skipNul=TRUE)
+print(data)
 
 # convert the DataFrame to a vector with the transpose of the DataFrame
 fileLoadedDataSet <- as.vector(t(data))
