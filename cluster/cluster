@@ -5,10 +5,10 @@ Load the R Packages that we will need on start up
 """
 
 from sklearn.cluster import k_means
-
+from sklearn import preprocessing
 import pandas as pd
 import argparse
-from numpy import loadtxt, asarray
+from numpy import loadtxt, asarray, apply_along_axis
 
 from rpy2 import robjects
 from rpy2.robjects.vectors import FloatVector
@@ -43,6 +43,15 @@ def createArgs():
              " in the range of 3 to 10."
              " <1 will be ignored and lists of length 0 are ignored, lists of length 1"
              "indicates that the upper and lower limit are the same."
+    )
+    parser.add_argument(
+        "-c", "--clustering",
+        type=str,
+        choices=["all", "k_means", "x_bins"],
+        default="all",
+        help="k_means: normal k_means clustering algorithm."
+             "x_bins: use K to create the number of bins spread out from max to min."
+             "all: run all algorithms"
     )
     parser.add_argument(
         "--init",
@@ -140,23 +149,23 @@ class Metrics:
         # to the R function so that it can be used later
         self.rFunc = robjects.globalenv['crit']
 
-    @staticmethod
-    def prepareData(data_set, k, init):
-        """
-        :param data_set:
-        :param k:
-        :param init:
-        """
-        centroids, matching_clusters, weighted_sum_to_centroids = k_means(data_set, k, init=init)
+    #@staticmethod
+    #def prepareData(data_set, k, init):
+    #    """
+    #    :param data_set:
+    #    :param k:
+    #    :param init:
+    #    """            
+    #    centroids, matching_clusters, weighted_sum_to_centroids = k_means(data_set, k, init=init)
 
-        # update the array values, in R the indicies started with 1 not 0
-        matching_clusters = asarray(matching_clusters) + 1
+    #    # update the array values, in R the indicies started with 1 not 0
+    #    matching_clusters = asarray(matching_clusters) + 1
 
-        # format the data as a list, this is expected by R
-        matching_clusters = matching_clusters.tolist()
-        return matching_clusters
+    #    # format the data as a list, this is expected by R
+    #    matching_clusters = matching_clusters.tolist()
+    #    return matching_clusters
 
-    def execOnData(self, data_set, labels, k):
+    def execCriteria(self, data_set, labels, k):
         """
         :param data_set:
         :param labels:
@@ -166,16 +175,58 @@ class Metrics:
             appliedData, critAlgorithms = self.rFunc(data_set, labels)
             numpy2ri.deactivate()
             return pd.DataFrame(appliedData, index=critAlgorithms, columns=[str(k)])
-        
-    def prepareAndExec(self, data_set, k, init):
-        """
-        convenience function. Please see `prepareData` and `execOnData` for 
-        more information.
-        """
-        mc = Metrics.prepareData(data_set, k, init)
-        return self.execOnData(data_set, mc, k)
 
 
+# The following functions can be passed to the class created above
+# these functions should create bins and put the data points into bins
+# or clusters. The bins or clusters should be returned as a list. 
+# each data point in the list will be the bin number 1 to n in the SAME
+# order as the original data set.
+def k_means_wrapper(data_set, k, *args, **kwargs):
+    """
+    
+    :param data_set:
+    :param k:
+    
+    \keyword args\
+    
+    :param init:
+    """
+    centroids, matching_clusters, weighted_sum_to_centroids = k_means(data_set, k, init=kwargs.get('init', 'k-means++'))
+    
+    # update the array values, in R the indicies started with 1 not 0
+    matching_clusters = asarray(matching_clusters) + 1
+
+    # format the data as a list, this is expected by R
+    matching_clusters = matching_clusters.tolist()
+    return matching_clusters
+
+
+def x_bins(data_set, k, *args, **kwargs):
+    """
+    :param data_set: Pandas dataframe 
+    :param k: Number of bins or clusters
+    """
+    mn = data_set.min()
+    diff = data_set.max() - mn
+    bin_range = diff / k
+
+    bins = [(mn+(bin_range*i), mn+(bin_range*(i+1))) for i in range(k+1)]
+
+    def _find_bin(row):
+        """
+        :param row: Dataframe row
+        """
+        for i, bin in enumerate(bins):
+            if bin[0] <= row[0] < bin[1]:
+                return i + 1 
+                
+    clusters = apply_along_axis(_find_bin, 1, data_set)
+    print(clusters)
+    clusters = clusters.tolist()
+    return clusters
+    
+    
 def createOutputFile(filename):
     """
     Given the original filename, create the output excel filename.
@@ -209,14 +260,29 @@ def processClusters(clusters):
     # never be less than 0 but you never know
     if len(clusters) <= 0:
         raise AttributeError
-    
-    if clusters[0] < 1 or clusters[1] < 1:
-        raise AttributeError
-    
+
     if len(clusters) == 1:
         return clusters[0], clusters[0]
     else:
+        if clusters[0] < 1 or clusters[1] < 1:
+            raise AttributeError
         return min(clusters[0], clusters[1]), max(clusters[0], clusters[1])
+
+
+def configure(**kwargs):
+    
+    funcs = {}
+    clustering = kwargs.get("clustering", None)
+    
+    if clustering is not None:
+        
+        if clustering in ("all", "k_means"):
+            funcs["k_means"] = k_means_wrapper
+            
+        if clustering in ("all", "x_bins"):
+            funcs["x_bins"] = x_bins
+
+    return funcs
 
     
 def main():
@@ -243,26 +309,30 @@ def main():
 
     minCluster, maxCluster = clusterData[0], clusterData[1]
 
-    excelDict = {}
-    clusterDict = {}
-    # batch these results
-    for cluster in range(minCluster, maxCluster+1):
-        matching_clusters = Metrics.prepareData(dataSet, cluster, args.init)
-        excelDict[cluster] = m.execOnData(dataSet, matching_clusters, cluster)
-        clusterDict[cluster] = matching_clusters
+    
+    configuredFuncs = configure(**vars(args))
 
     outputFile = createOutputFile(args.file)
 
-    # Write the output to the excel file
-    col = 0
-    with pd.ExcelWriter(outputFile, engine='xlsxwriter') as w:
-        # write all of the metric information to the first sheet
-        for sheet, data in excelDict.items():
-            data.to_excel(w, sheet_name="metrics", startcol=col, index=col==0)
-            col = col + 1 if col > 0 else col + 2
+    for sheet_name, func in configuredFuncs.items():
+        excelDict = {}
+        clusterDict = {}
+        # batch these results
+        for cluster in range(minCluster, maxCluster+1):
+            matching_clusters = func(dataSet, cluster, **vars(args))
+            excelDict[cluster] = m.execCriteria(dataSet, matching_clusters, cluster)
+            clusterDict[cluster] = matching_clusters
     
-        # write all of the cluster information to another sheet
-        pd.DataFrame(clusterDict).to_excel(w, sheet_name="clusters")
+        # Write the output to the excel file
+        col = 0
+        with pd.ExcelWriter(outputFile, engine='xlsxwriter') as w:
+            # write all of the metric information to the first sheet
+            for sheet, data in excelDict.items():
+                data.to_excel(w, sheet_name=sheet_name, startcol=col, index=col==0)
+                col = col + 1 if col > 0 else col + 2
+        
+            # write all of the cluster information to another sheet
+            pd.DataFrame(clusterDict).to_excel(w, sheet_name=sheet_name + "clusters")
 
 
 if __name__ == '__main__':
