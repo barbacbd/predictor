@@ -1,4 +1,4 @@
-from setuptools import setup, find_namespace_packages
+from setuptools import setup, find_packages
 
 from os import path
 this_directory = path.abspath(path.dirname(__file__))
@@ -16,6 +16,7 @@ setup(
     license='Proprietary',
     include_package_data=True,
     package_data={},
+    packages=find_packages(),
     python_requires='>=3.4, <4',
     install_requires=[
         'sklearn',
@@ -23,9 +24,13 @@ setup(
         'numpy',
         'rpy2'
     ],
+    entry_points={
+        'console_scripts': [
+            'cluster=cluster.cluster_exec:main'
+        ]
+    },
     dependency_links=[
         'https://pypi.org/simple/'
     ],
-    scripts=['cluster/cluster'],
     zip_safe=False
 )
