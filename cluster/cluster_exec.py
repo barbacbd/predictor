@@ -34,7 +34,7 @@ def create_args():
     parser.add_argument(
         "-c", "--clustering",
         type=str,
-        choices=["all", "k_means", "x_bins", "e_bins"],
+        choices=["all", "k_means", "x_bins", "e_bins", "natural_breaks", "kde"],
         default="all",
         help="k_means: normal k_means clustering algorithm."
              "x_bins: use K to create the number of bins spread out from max to min."

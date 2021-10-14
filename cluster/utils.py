@@ -58,5 +58,11 @@ def configure(**kwargs):
         
         if clustering in ("all", "e_bins"):
             funcs["e_bins"] = e_bins
+        
+        if clustering in ("all", "natural_breaks"):
+            funcs["natural_breaks"] = natural_breaks
+        
+        if clustering in ("all", "kde"):
+            funcs["kde"] = kde
 
     return funcs

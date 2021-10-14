@@ -1,7 +1,11 @@
-from numpy import loadtxt, asarray, apply_along_axis, argsort, argsort, zeros
+from numpy import loadtxt, asarray, apply_along_axis, argsort, argsort, zeros, std, linspace, less, greater
 from sklearn.cluster import k_means
 from copy import copy
 from math import ceil
+import pandas as pd
+import jenkspy
+from sklearn.neighbors import KernelDensity
+from scipy.signal import argrelextrema
 
 
 # The following functions can be passed to the class created above
@@ -115,3 +119,40 @@ def e_bins(data_set, k, *args, **kwargs):
                 fl[data] = i+1
                 
     return fl.T.astype(int)[0].tolist()
+
+
+
+def natural_breaks(data_set, k, *args, **kwargs):
+    df = pd.DataFrame(data_set, columns=["Data Points"])
+    df.sort_values(by='Data Points')
+    df['bin'] = pd.cut(
+        df['Data Points'], 
+        bins=jenkspy.jenks_breaks(df['Data Points'], nb_class=k),
+        labels=[x for x in range(1, k+1)],
+        include_lowest=True
+        )
+    return df['bin'].to_list()
+    
+
+def kde(data_set, k, *args, **kwargs):
+    
+    data_std = std(data_set)
+    #print(data_std)
+    bw = 1.06*data_std*data_set.size**(-1.0/5.0)
+    #print(bw)
+    
+    print(type(data_set))
+    _kde = KernelDensity(kernel='gaussian', bandwidth=bw).fit(data_set)
+    print(_kde.score_samples(data_set))
+    #_kde = KernelDensity(kernel='gaussian', bandwidth=k).fit(data_set)
+    
+    #print(_kde)
+    
+    s = linspace(0, 50)
+    e = _kde.score_samples(s.reshape(-1,1))
+    print(e)
+    mi, ma = argrelextrema(e, less)[0], argrelextrema(e, greater)[0]
+    
+    print(s[mi])
+    print(s[ma])
+    
