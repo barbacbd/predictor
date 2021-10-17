@@ -45,6 +45,19 @@
 ## Algorithms 
 
 
+### Kmeans / Kmeans1D
+
+### X (even spaced) Bins
+
+
+### E (even) Bins
+
+
+### Natural Breaks
+
+
+### Kernel Density Estimation
+
 
 ## Cluster Script (python)
 
