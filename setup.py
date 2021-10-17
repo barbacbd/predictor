@@ -22,7 +22,10 @@ setup(
         'sklearn',
         'pandas',
         'numpy',
-        'rpy2'
+        'rpy2',
+        'scipy',
+        'kmeans1d',
+        'jenkspy'
     ],
     entry_points={
         'console_scripts': [

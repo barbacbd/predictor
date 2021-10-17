@@ -6,27 +6,35 @@ import pandas as pd
 import jenkspy
 from sklearn.neighbors import KernelDensity
 from scipy.signal import argrelextrema
+from kmeans1d import cluster as kmeans1dc
 
 
-# The following functions can be passed to the class created above
-# these functions should create bins and put the data points into bins
-# or clusters. The bins or clusters should be returned as a list. 
-# each data point in the list will be the bin number 1 to n in the SAME
-# order as the original data set.
 def k_means_wrapper(data_set, k, *args, **kwargs):
     """
+    The function will call the kmeans algorithm for data where the 
+    dimensions are greater than 1, while the kmeans1d algorithm will be
+    used for 1-dimensional data. While kmeans can be applied to data of
+    any number of dimensions, 1-D data is a special case and should be handled
+    appropriately.
+
+    :param data_set: numpy array
+    :param k: number of clusters
     
-    :param data_set:
-    :param k:
-    
-    \keyword args\
-    
-    :param init:
+    Keyword Arguments:
+
+    :param init: Applies ONLY to data that has more than one dimension. The 
+    `init` should be used to pass the data kmeans. 
     """
-    centroids, matching_clusters, weighted_sum_to_centroids = k_means(
-        data_set, k, init=kwargs.get('init', 'k-means++')
-    )
-    
+
+    rows, cols = data_set.shape
+
+    if cols == 1:
+        matching_clusters, centroids = kmeans1dc(data_set, k)
+    else:
+        centroids, matching_clusters, weighted_sum_to_centroids = k_means(
+            data_set, k, init=kwargs.get('init', 'k-means++')
+        )
+
     # update the array values, in R the indicies started with 1 not 0
     matching_clusters = asarray(matching_clusters) + 1
 
@@ -37,8 +45,14 @@ def k_means_wrapper(data_set, k, *args, **kwargs):
 
 def x_bins(data_set, k, *args, **kwargs):
     """
-    :param data_set: Pandas dataframe 
+    Create K number of even width'd bins. Find the max
+    and min values in the dataset. Divide the space between
+    max and min into k bins.
+
+    :param data_set: numpy array
     :param k: Number of bins or clusters
+
+    :return: cluster numbers in order for the original dataset
     """
     mn = data_set.min()
     diff = data_set.max() - mn
@@ -65,8 +79,8 @@ def e_bins(data_set, k, *args, **kwargs):
     data into k number of bins where each bin has the same or close to the same number
     of entries.
     
-    :param data_set:
-    :param k:
+    :param data_set: numpy array
+    :param k: number of clusters
     """
     data_set_copy = copy(data_set)
     
@@ -123,6 +137,19 @@ def e_bins(data_set, k, *args, **kwargs):
 
 
 def natural_breaks(data_set, k, *args, **kwargs):
+    """
+    Implementation of the natural breaks or jenks_breaks algorithm
+    on the 1-Dimensional dataset. The algorithm will attempt to 
+    find the natural break points in the dataset. 
+
+    Sort the dataset (which keeps the original index values) and apply
+    the function to the sorted data. 
+
+    :param data_set: Numpy array 
+    :param k: number of clusters
+
+    :return: `clusters` or groups of data 
+    """
     df = pd.DataFrame(data_set, columns=["Data Points"])
     df.sort_values(by='Data Points')
     df['bin'] = pd.cut(
@@ -135,24 +162,23 @@ def natural_breaks(data_set, k, *args, **kwargs):
     
 
 def kde(data_set, k, *args, **kwargs):
-    
+    """
+    Kernel Density Estimation 
+
+    Algorithm that is considered a great metric for 1-Dimensional
+    `clustering`. 
+    """
+    raise NotImplementedError("KDE")  
     data_std = std(data_set)
-    #print(data_std)
+
+    # For gaussian `default`, The formula
+    # 1.06n(theta)^(-1/5) was selected
     bw = 1.06*data_std*data_set.size**(-1.0/5.0)
-    #print(bw)
-    
-    print(type(data_set))
     _kde = KernelDensity(kernel='gaussian', bandwidth=bw).fit(data_set)
-    print(_kde.score_samples(data_set))
-    #_kde = KernelDensity(kernel='gaussian', bandwidth=k).fit(data_set)
     
-    #print(_kde)
-    
+    # apply the dataset to a linearspace
     s = linspace(0, 50)
     e = _kde.score_samples(s.reshape(-1,1))
-    print(e)
     mi, ma = argrelextrema(e, less)[0], argrelextrema(e, greater)[0]
     
-    print(s[mi])
-    print(s[ma])
-    
+    # clusters should be found using mi and ma

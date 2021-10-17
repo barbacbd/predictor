@@ -3,7 +3,7 @@
 # install and load missing packages
 install.packages("librarian", repos="http://cran.us.r-project.org", quiet=TRUE)
 
-librarian::shelf(clusterCrit, docopt, quiet=TRUE)
+librarian::shelf(clusterCrit, docopt, Ckmeans.1d.dp, quiet=TRUE)
 
 doc <- '
 Usage:
@@ -61,9 +61,17 @@ if (opt$cols) {
 # $tot.withinss: sum of withinss
 # $betweenss: total sum of square minus within sum of square
 # $size: number of observation within each cluster
-kmeansOutput <- kmeans(fileLoadedDataSet, opt$clusters)
+#kmeansOutput <- kmeans(fileLoadedDataSet, opt$clusters)
 
-ccData <- clusterCrit::intCriteria(fileLoadedMatrix, kmeansOutput$cluster, "all")
+ckmeansOutput <- MultiChannel.WUC(
+    x=fileLoadedMatrix, 
+    matrix(1, nrow=nrow(fileLoadedMatrix), ncol=1), 
+    k=c(as.integer(2:50))
+)
+
+print(ckmeansOutput)
+ccData <- clusterCrit::intCriteria(fileLoadedMatrix, ckmeansOutput$cluster, "all")
+#ccData <- clusterCrit::intCriteria(fileLoadedMatrix, kmeansOutput$cluster, "all")
 
 # covert the list from above to a matrix, give the matrix the row values
 # corresponding to the algorithm that was run

@@ -3,6 +3,7 @@ from .file import read_data
 from .utils import *
 from .r import Metrics
 import pandas as pd
+from .selection import metricChoices, select as metricSelection
 
 
 def create_args():
@@ -35,7 +36,7 @@ def create_args():
         "-c", "--clustering",
         type=str,
         choices=["all", "k_means", "x_bins", "e_bins", "natural_breaks", "kde"],
-        default="all",
+        default="k_means",
         help="k_means: normal k_means clustering algorithm."
              "x_bins: use K to create the number of bins spread out from max to min."
              "e_bins: even number per bin or cluster."
@@ -49,6 +50,25 @@ def create_args():
         help="When present, this option inidcates the use of kmeans vs kmeans++ (default)."
     )
     return parser
+
+
+def _highlightSelections(df, selections):
+    """
+    Function to be applied to a row of the dataframe. For each
+    Algorithm (key) Cluster (value) pair, change the color of the
+    dataframe cell when it is output to excel.
+
+    :return: Style from pandas that will be applied.
+    """
+    color = "background-color: yellow;"
+    local_df = df.copy()
+    local_df.loc[:,:] = ''
+
+    for row, col in selections.items():
+        if col is not None:
+            local_df.loc[row, col] = 'background-color: yellow'
+
+    return local_df
 
     
 def main():
@@ -84,19 +104,37 @@ def main():
         for sheet_name, func in configured_funcs.items():
             excel_dict = {}
             cluster_dict = {}
+            
+            # Create a dataframe that will be concatenated to 
+            cloned_df = None
+            
             # batch these results
             for cluster in range(min_cluster, max_cluster+1):
                 matching_clusters = func(data_set, cluster, **vars(args))
+                fdf = m.exec_criteria(data_set, matching_clusters, cluster)
+                
+                if cloned_df is None:
+                    cloned_df = fdf
+                else:
+                    cloned_df = pd.concat([cloned_df, fdf], axis=1)
+                    
+                # save the result of the algorithms as well as the clusters for 
+                # cluster K .
                 excel_dict[cluster] = m.exec_criteria(data_set, matching_clusters, cluster)
                 cluster_dict[cluster] = matching_clusters
-    
-            # Write the output to the excel file
-            col = 0
+        
+            # drop the names from the dataframe that we don't want. 
+            for idx in set(cloned_df.index) - set(list(metricChoices.keys())):
+                cloned_df.drop(index=idx, inplace=True)
 
-            # write all of the metric information to the first sheet
-            for sheet, data in excel_dict.items():
-                data.to_excel(w, sheet_name=sheet_name, startcol=col, index=col==0)
-                col = col + 1 if col > 0 else col + 2
+
+            selections = metricSelection(cloned_df)
+
+            # add the function type from the `metricChoices` dictionary, do a little magic for display
+            cloned_df["Function"] = [y.__name__.replace("df_", "").replace("_", " ") for x,y in metricChoices.items()]
+
+            # highlight the row/column pairs where the results were found
+            cloned_df.style.apply(_highlightSelections, selections=selections, axis=None).to_excel(w, sheet_name=sheet_name)
         
             # write all of the cluster information to another sheet
             pd.DataFrame(cluster_dict).to_excel(w, sheet_name=sheet_name + "_clusters")
