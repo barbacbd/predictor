@@ -1,3 +1,25 @@
+
+def check_for_singletons(df):
+    """
+    Check the dataframe consisting of cluster numbers attached to each datapoint.
+    Each column should be the number of clusters that the algorithm(s) were run 
+    against.
+    
+    :param df: pandas dataframe. (see above)
+    :return: Dictionary where the key is the column (K), a value of true indicates
+    that the column contains singleton cluster
+    """
+
+    singleton_cols = {}
+    for column_name in df.columns.values.tolist():
+        print("Looking for duplicates in %s" % column_name)
+        output = df.duplicated(subset=column_name, keep=False).value_counts()
+        
+        singleton_cols[column_name] = False in output
+
+    return singleton_cols
+
+
 def df_min_diff(row):
     """
     The function is applied to columns start + 1 - n

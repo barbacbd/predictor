@@ -135,7 +135,7 @@ def main():
 
             # highlight the row/column pairs where the results were found
             cloned_df.style.apply(_highlightSelections, selections=selections, axis=None).to_excel(w, sheet_name=sheet_name)
-        
+
             # write all of the cluster information to another sheet
             pd.DataFrame(cluster_dict).to_excel(w, sheet_name=sheet_name + "_clusters")
 
