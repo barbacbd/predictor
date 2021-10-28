@@ -1,7 +1,7 @@
 import argparse
 from .file import read_data
 from .utils import *
-from .r import Metrics
+from .r import ClusterCrit
 import pandas as pd
 from .selection import metricChoices, select as metricSelection
 
@@ -78,7 +78,7 @@ def main():
     parser = create_args()
     args = parser.parse_args()
     
-    m = Metrics()
+    m = ClusterCrit()
     
     # graceful fail
     data_set = read_data(args.file)
@@ -91,7 +91,7 @@ def main():
         cluster_data = process_clusters(args.clusters)
     except AttributeError:
         print("ERROR check your cluster values")
-        exit(1)
+        raise
 
     min_cluster, max_cluster = cluster_data[0], cluster_data[1]
 
@@ -111,7 +111,7 @@ def main():
             # batch these results
             for cluster in range(min_cluster, max_cluster+1):
                 matching_clusters = func(data_set, cluster, **vars(args))
-                fdf = m.exec_criteria(data_set, matching_clusters, cluster)
+                fdf = m(data_set, matching_clusters, cluster)
                 
                 if cloned_df is None:
                     cloned_df = fdf
@@ -120,7 +120,7 @@ def main():
                     
                 # save the result of the algorithms as well as the clusters for 
                 # cluster K .
-                excel_dict[cluster] = m.exec_criteria(data_set, matching_clusters, cluster)
+                excel_dict[cluster] = m(data_set, matching_clusters, cluster)
                 cluster_dict[cluster] = matching_clusters
         
             # drop the names from the dataframe that we don't want. 
