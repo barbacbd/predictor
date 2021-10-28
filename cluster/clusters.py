@@ -85,55 +85,13 @@ def e_bins(data_set, k, *args, **kwargs):
     data_set_copy = copy(data_set)
     
     rows, cols = data_set.shape
-    fl = zeros((rows, 1))
 
-    per_bin = int(round(rows / k))
-    extra = rows - (per_bin * k)
-
-    if extra > 0:
-        # start in the middle and add some to each side to balance out 
-        # the distribution
-        bins = []
-        num_to_each = ceil(extra / k)
-
-        # setup if we have odd or even number of bins add a bit extra to those first        
-        for i in range(2-(k%2)):
-            bins.append(per_bin + min(num_to_each, extra))
-            extra = max(extra - num_to_each, 0)
-        
-        # now we can add extra to each side, if enough
-        for i in range(0, k-len(bins), 2):
-
-            # NOTE: this does front load the lists
-            bins.insert(0, per_bin + min(num_to_each, extra))
-            extra = max(extra - num_to_each, 0)
-            
-            # could half it here
-            bins.append(per_bin + min(num_to_each, extra))
-            extra = max(extra - num_to_each, 0)
-    else:
-        bins = [per_bin] * k
-
-    x = argsort(data_set_copy[:, 0])
-    
-    for i, bin in enumerate(bins):
-    
-        # get the indices of the elements in the bin
-        spl = x[:bin]
-        
-        fl[spl, ] = i+1
-
-        # adjust     
-        x = x[bin:]
-        
-        # remove singletons
-        if i == k-1 and len(x) > 0:
-            # grouping a bit odd here
-            for data in x:
-                fl[data] = i+1
-                
-    return fl.T.astype(int)[0].tolist()
-
+    # this may not be the EXACT number per bin as duplicates must be 
+    # moved to the same bin to avoid an error where the bin limits 
+    # are the same value
+    out = pd.qcut(data_set[:,0], q=k, labels=False)
+    out += 1  # expects 1 - k, not 0 - k-1
+    return out.tolist()
 
 
 def natural_breaks(data_set, k, *args, **kwargs):
