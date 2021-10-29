@@ -1,3 +1,5 @@
+from numpy import inf, nan
+
 
 def check_for_singletons(df):
     """
@@ -36,6 +38,9 @@ def df_min_diff(row):
     local_min_value = None
 
     for i in range(1, len(row.values.tolist()), 1):
+        if row[i] in (-inf, inf, nan) or row[i-1] in (-inf, inf, nan):
+            continue
+
         if local_min_value is None or row[i] - row[i-1] < local_min_value:
             local_min_idx = i
 
@@ -57,6 +62,9 @@ def df_max_diff(row):
     local_max_value = None
 
     for i in range(1, len(row.values.tolist()), 1):
+        if row[i] in (-inf, inf, nan) or row[i-1] in (-inf, inf, nan):
+            continue
+
         if local_max_value is None or row[i] - row[i-1] > local_max_value:
             local_max_idx = i
 
@@ -123,14 +131,22 @@ def select(df):
     :return: dictionary of algorithms (key) to their resulting column (cluster). 
     It is possible for `None` to be in the resultant value field.
     """
+
+    # don't modify the supplied dataframe
+    df_copy = df.copy(deep=True)
+
+    # modify the copy by removing all infinite values and replacing with NaN
+    # this will allow us to not include them in the comparisons in the selection functions
+    df_copy.replace([-inf, inf], nan, inplace=True)
+
     # result 
     selections = {}
 
     # create a reference list of all column names to be looked
     # up later (this isn't required, but it makes it easier for later)
-    ref_cols = df.columns.values.tolist()
+    ref_cols = df_copy.columns.values.tolist()
 
-    for idx, row in df.iterrows():
+    for idx, row in df_copy.iterrows():
 
         # Get the function associated with the row (algorithm)
         # if this is a function and not some mistake, run the function
