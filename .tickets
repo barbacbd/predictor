@@ -1,11 +1,4 @@
-1. Batch runs using thread spooling and thread pools
-   - Estimate number of threads
-
 2. Implement KDE
-
-3. Eliminate the comparisons when values are at infinity or -infinity
-
-4. Batch the types of algorithms too
 
 5. unit tests
 

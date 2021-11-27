@@ -1,7 +1,7 @@
 import argparse
 from .file import read_data
 from .utils import *
-from .r import ClusterCrit
+from .r import crit
 import pandas as pd
 from .selection import metricChoices, select as metricSelection
 
@@ -78,8 +78,6 @@ def main():
     parser = create_args()
     args = parser.parse_args()
     
-    m = ClusterCrit()
-    
     # graceful fail
     data_set = read_data(args.file)
     
@@ -111,7 +109,7 @@ def main():
             # batch these results
             for cluster in range(min_cluster, max_cluster+1):
                 matching_clusters = func(data_set, cluster, **vars(args))
-                fdf = m(data_set, matching_clusters, cluster)
+                fdf = crit(data_set, matching_clusters, cluster)
                 
                 if cloned_df is None:
                     cloned_df = fdf
@@ -120,7 +118,7 @@ def main():
                     
                 # save the result of the algorithms as well as the clusters for 
                 # cluster K .
-                excel_dict[cluster] = m(data_set, matching_clusters, cluster)
+                excel_dict[cluster] = crit(data_set, matching_clusters, cluster)
                 cluster_dict[cluster] = matching_clusters
         
             # drop the names from the dataframe that we don't want. 

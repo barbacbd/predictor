@@ -6,30 +6,27 @@ from rpy2.robjects.vectors import StrVector
 import pandas as pd
 from threading import Lock
 from enum import Enum
+import inspect
 
 
-# should this be a singleton ? Ehh probably that way its not constantly loading data
-
-
-class ClusterCrit(object):
+class RInterface(object):
 
     _instance = None
     _lock = Lock()
-    _func = None
 
     def __new__(cls, *args, **kwargs):
 
         if not cls._instance:
             with cls._lock:
 
-                cls._instance = super(ClusterCrit, cls).__new__(cls, *args, **kwargs)
+                cls._instance = super(RInterface, cls).__new__(cls, *args, **kwargs)
 
                 # R's utility package
                 utils = importr('utils')
                 utils.chooseCRANmirror(ind=1)
         
                 # R package names
-                packnames = ('clusterCrit',)
+                packnames = ('clusterCrit', 'cacc')
             
                 names_to_install = [x for x in packnames if not isinstalled(x)]
                 if len(names_to_install) > 0:
@@ -52,16 +49,20 @@ class ClusterCrit(object):
                     ccData <- clusterCrit::intCriteria(dataset, unlist(labels), "all")
                     return(list(ccData, clusterCrit::getCriteriaNames(TRUE)))
                     }
+                    
+                    # Add CACC here
+                    # ...
                     '''
                 )
         
                 # technically this is global but return the `alias` or the callable
                 # to the R function so that it can be used later
-                cls._func = robjects.globalenv['crit']
+                #cls._funcs['crit'] = robjects.globalenv['crit']
+                #cls._funcs['cacc'] = robjects.globalenv['cacc']
 
         return cls._instance
 
-    def __call__(self, data_set, labels, k, *args, **kwargs):
+    def __call__(self, *args, **kwargs):
         """
         Allow the caller to access the cluster crit package from R.
 
@@ -75,12 +76,45 @@ class ClusterCrit(object):
         are the algorithms run within the cluster crit package
         """
         with self._lock:
-            if self._func is not None:
+            func_name = inspect.stack()[1][3]
+            if func_name in robjects.globalenv:
                 numpy2ri.activate()
-                applied_data, crit_algorithms = self._func(data_set, labels)
+                ret = robjects.globalenv[func_name](*args)
                 numpy2ri.deactivate()
-                return pd.DataFrame(applied_data, index=crit_algorithms, columns=[str(k)])
+                return ret
 
+
+def crit(data_set, labels, k):
+    """
+    Allow the caller to access the cluster crit package from R.
+
+    :param data_set: Original Data set
+    :param labels: Array/List type object that contains (in order of the original data set)
+    the cluster number from 1-k where the data point aligns.
+    :param k: Number of clusters that the algorithm was run with. This is
+    provided for display/label purposes ONLY.
+    
+    :return: Pandas Dataframe where the column is the number k (provided) and the rows
+    are the algorithms run within the cluster crit package
+    """
+    r = RInterface()
+    applied_data, crit_algorithms = r(data_set, labels)
+    return pd.DataFrame(applied_data, index=crit_algorithms, columns=[str(k)])
+
+
+def cacc(df):
+    """
+    Class-Attribute Contingency Coefficient. Discretization Algorithm
+    
+    See `https://www.rdocumentation.org/packages/discretization/versions/1.0-1/topics/cacc` 
+    
+    :param df: 
+    
+    :return:    
+    """
+    r = RInterface()
+    ret = r(df)
+    return ret
 
 
 class CritSelection(Enum):
@@ -101,21 +135,6 @@ class CritSelection(Enum):
     Dunn = 7
     Gamma = 8
     G_plus = 9
-    # GDI11 
-    # GDI12 
-    # GDI13 
-    # GDI21 
-    # GDI22 
-    # GDI23 
-    # GDI31 
-    # GDI32 
-    # GDI33 
-    # GDI41 
-    # GDI42 
-    # GDI43 
-    # GDI51 
-    # GDI52 
-    # GDI53 
     Ksq_DetW = 10
     Log_Det_Ratio = 11
     Log_SS_Ratio = 12
