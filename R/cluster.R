@@ -3,7 +3,7 @@
 # install and load missing packages
 install.packages("librarian", repos="http://cran.us.r-project.org", quiet=TRUE)
 
-librarian::shelf(clusterCrit, docopt, Ckmeans.1d.dp, quiet=TRUE)
+librarian::shelf(clusterCrit, docopt, Ckmeans.1d.dp, discretization, quiet=TRUE)
 
 doc <- '
 Usage:
@@ -79,4 +79,6 @@ ccMatrix <- matrix(ccData, ncol=1)
 rownames(ccMatrix)<-(clusterCrit::getCriteriaNames(TRUE))
 
 # write the data to the file of choice. Should be a CSV file
-write.table(ccMatrix, file=opt$output, sep=",", row.names=TRUE, col.names=FALSE)
+# write.table(ccMatrix, file=opt$output, sep=",", row.names=TRUE, col.names=FALSE)
+cacc_output <- discretization::cacc(ccMatrix)
+print(cacc_output)
