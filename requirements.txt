@@ -1,0 +1,9 @@
+sklearn
+pandas
+numpy
+rpy2
+scipy
+kmeans1d
+jenkspy
+pyyaml
+inquirer

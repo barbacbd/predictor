@@ -33,21 +33,36 @@ def config(*args, **kwargs):
     cluster_types = ["k_means", "x_bins", "e_bins", "natural_breaks", "kde"]
     cluster_algorithm = list_input(
         message='Select the cluster algorithm',
-        choices=["all"] + cluster_types
+        choices=["All"] + cluster_types
     )
-    configuration_dict['cluster_algorithm'] = cluster_algorithm
 
     kmeans_type = None
-    if cluster_algorithm in ('k_means', 'all'):
+    if cluster_algorithm in ('k_means', 'All'):
         kmeans_type = list_input(message='kmeans usage', choices=['k-means++', 'random'])
         configuration_dict['algorithm_settings'] = kmeans_type
+    
+    if cluster_algorithm == "All":
+        cluster_algorithm = cluster_types
+    else:
+        cluster_algorithm = [cluster_algorithm]
 
+    # configuration will create as a list, even for a single entry to allow
+    # additional after configuration
+    configuration_dict['cluster_algorithms'] = cluster_algorithm
+    
     cluster_crit_data = {x: str(x.name).replace("_", " ") for x in CritSelection}
     crit_algorithms = list_input(
         message='Slect the cluster crit algorithm(s)',
         choices=list(cluster_crit_data.values())
     )
-    configuration_dict['crit_algorithm'] = crit_algorithms
+    if crit_algorithms == "ALL":
+        crit_algorithms = [x for x in cluster_crit_data.values() if x != crit_algorithms]
+    else:
+        crit_algorithms = [crit_algorithms]
+
+    # configuration will create as a list, even for a single entry to allow
+    # additional after configuration
+    configuration_dict['crit_algorithms'] = crit_algorithms
     
     with open('configuration.yaml', 'w') as yaml_file:
         data = dump(configuration_dict, yaml_file)

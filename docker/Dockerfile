@@ -11,7 +11,9 @@ RUN dnf install -y \
     python3-pip \
     git \
     openssh \
-    openssh-clients 
+    openssh-clients \
+    emacs \
+    vim 
 
 # Copy All ssh keys over from the home environment. This
 # will allow us to grab the github project
@@ -25,7 +27,10 @@ RUN git clone git@github.com:barbacbd/cluster.git
 
 # Move into the package we just pulled
 
-RUN cd cluster && python3 -m venv venv
+RUN cd cluster && \
+    python3 -m venv venv && \
+    source venv/bin/activate && \
+    pip install . --upgrade
 
-# install the source 
-#RUN python3 -m pip install . --upgrade
+
+
