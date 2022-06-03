@@ -23,7 +23,7 @@ COPY id_rsa /root/.ssh/id_rsa
 RUN ssh-keyscan -t rsa github.com >> /root/.ssh/known_hosts
 
 # Grab the lastest package source.
-RUN git clone git@github.com:barbacbd/cluster.git
+RUN git clone git@github.com:{{ USER }}/cluster.git
 
 # upgrade pip
 RUN python3 -m pip install pip --upgrade
@@ -31,5 +31,5 @@ RUN python3 -m pip install pip --upgrade
 # install the project requirements
 RUN python3 -m pip install -r cluster/requirements.txt
 
-RUN git config --global user.email "barbacbd@dukes.jmu.edu"
-RUN git config --global user.name "Brent Barbachem"
+RUN git config --global user.email "{{ EMAIL }}"
+RUN git config --global user.name "{{ FULLNAME }}"
