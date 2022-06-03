@@ -25,12 +25,8 @@ RUN ssh-keyscan -t rsa github.com >> /root/.ssh/known_hosts
 # Grab the lastest package source.
 RUN git clone git@github.com:barbacbd/cluster.git
 
-# Move into the package we just pulled
+# upgrade pip
+RUN python3 -m pip install pip --upgrade
 
-RUN cd cluster && \
-    python3 -m venv venv && \
-    source venv/bin/activate && \
-    pip install . --upgrade
-
-
-
+# install the project requirements
+RUN python3 -m pip install -r cluster/requirements.txt
