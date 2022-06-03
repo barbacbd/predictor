@@ -7,6 +7,7 @@ import jenkspy
 from sklearn.neighbors import KernelDensity
 from scipy.signal import argrelextrema
 from kmeans1d import cluster as kmeans1dc
+from enum import Enum
 
 
 def k_means_wrapper(data_set, k, *args, **kwargs):
@@ -140,3 +141,36 @@ def kde(data_set, k, *args, **kwargs):
     mi, ma = argrelextrema(e, less)[0], argrelextrema(e, greater)[0]
     
     # clusters should be found using mi and ma
+
+
+class ClusterAlgorithm(Enum):
+    ALL = 0
+    K_MEANS = 1
+    X_BINS = 2
+    E_BINS = 3
+    NATURAL_BREAKS = 4
+    KDE = 5
+
+    @classmethod
+    def list_functions(cls, algorithm):
+        '''Get the function that implements the algorithm associated with 
+        the enumeration type.
+
+        :return: list of functions
+        '''
+        funcs = []
+
+        func_dict = {
+            cls.K_MEANS: k_means_wrapper,
+            cls.X_BINS: x_bins,
+            cls.E_BINS: e_bins,
+            cls.NATURAL_BREAKS: natural_breaks,
+            cls.KDE: kde
+        }
+        
+        if algorithm in self:
+            if algoritm == cls.ALL:
+                return list(func_dict.values())
+            else:
+                funcs.append(func_dict.get(algorithm))
+        return funcs

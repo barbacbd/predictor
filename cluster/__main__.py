@@ -2,16 +2,25 @@ from inquirer import prompt, list_input, text
 import argparse
 from yaml import dump
 from os.path import exists
-from r import CritSelection
+from .r import CritSelection
+from .clusters import ClusterAlgorithm
+from .config import Config
+from multiprocessing import Process
+from .log import get_logger
 
+
+config_filename = "configuration.yaml"
+log = None
 
 
 def config(*args, **kwargs):
     '''Create the configuration file by asking for user input.
     The configuration file will be consumed by the other processes
     '''
-    if exists('configuration.yaml'):
+    log.info("Executing the configuration.")
+    if exists(config_filename):
         # file exists already do not do anything !
+        log.debug("%s exists, using the confguration file ...", config_filename)
         return
     
     configuration_dict = {}
@@ -27,21 +36,21 @@ def config(*args, **kwargs):
     try:
         configuration_dict['max_number_of_clusters'] = int(number_of_clusters)
     except (TypeError, ValueError) as error:
-        # log.debug(error)
+        log.debug(error)
         configuration_dict['max_number_of_clusters'] = 10
 
-    cluster_types = ["k_means", "x_bins", "e_bins", "natural_breaks", "kde"]
+    cluster_types = {x: str(x.name).replace("_", " ") for x in ClusterAlgorithm}
     cluster_algorithm = list_input(
         message='Select the cluster algorithm',
         choices=["All"] + cluster_types
     )
 
     kmeans_type = None
-    if cluster_algorithm in ('k_means', 'All'):
+    if cluster_algorithm in (ClusterAlgorithm.ALL.name, ClusterAlgorithm.K_MEANS.name):
         kmeans_type = list_input(message='kmeans usage', choices=['k-means++', 'random'])
         configuration_dict['algorithm_settings'] = kmeans_type
     
-    if cluster_algorithm == "All":
+    if cluster_algorithm == ClusterAlgorithm.ALL.name:
         cluster_algorithm = cluster_types
     else:
         cluster_algorithm = [cluster_algorithm]
@@ -55,7 +64,7 @@ def config(*args, **kwargs):
         message='Slect the cluster crit algorithm(s)',
         choices=list(cluster_crit_data.values())
     )
-    if crit_algorithms == "ALL":
+    if crit_algorithms == CritSelection.ALL.name:
         crit_algorithms = [x for x in cluster_crit_data.values() if x != crit_algorithms]
     else:
         crit_algorithms = [crit_algorithms]
@@ -64,27 +73,48 @@ def config(*args, **kwargs):
     # additional after configuration
     configuration_dict['crit_algorithms'] = crit_algorithms
     
-    with open('configuration.yaml', 'w') as yaml_file:
+    with open(config_filename, 'w') as yaml_file:
         data = dump(configuration_dict, yaml_file)
 
 
 def feast(*args, **kwargs):
     '''Run the feature selection on the output of a previous step
     '''
+    log.info("Executing FEAST.")
 
 
 
 def execute(*args, **kwargs):
     '''Run ALL of the other functions'''
+    log.info("Executing execute.")
     config(*args, **kwargs)
     
-        
+    config_obj = Config(config_filename)
+    config_instances = config.obj.instances
+
+    processes = []
+    log.info("Creating %d processes to run workup ...", len(config_instances))
+    for instance in config_instances:
+        processes.append(Process(target=instance.workup))
+
+    log.info("Starting %d processes ...", len(config_instances))
+    for process in processes:
+        process.start()
+
 
 def main():
     '''Main entry point. The user will select the execution path
     through the argparse commands.
     '''
+    globals log
+    
     parser = argparse.ArgumentParser(prog='docu')
+    parser.add_argument(
+        '-v', '--verbose',
+        action='count',
+        default=0,
+        help='Verbosity level for logging'
+    )
     subparsers = parser.add_subparsers(dest='command')
     subparsers.required = True
 
@@ -104,6 +134,15 @@ def main():
 
     args = parser.parse_args()
 
+    # verbosity starts at 10 and moves to 50
+    if args.verbose > 0:
+        verbosity = 50 - (10*(args.verbose-1))
+    else:
+        verbosity = logging.CRITICAL
+
+    # setup the logger
+    log = get_logger(verbosity)
+        
     globals()[args.command](args)
 
 

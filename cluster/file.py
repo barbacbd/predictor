@@ -49,3 +49,23 @@ def read_data(filename):
             data = data.reshape(-1, 1)
 
     return data
+
+
+def highlight_selections(df, selections):
+    '''Function to be applied to a row of the dataframe. For each
+    Algorithm (key) Cluster (value) pair, change the color of the
+    dataframe cell when it is output to excel.
+
+    :param df: Dataframe
+    :param selections:
+    :return: Style from pandas that will be applied.
+    '''
+    color = "background-color: yellow;"
+    local_df = df.copy()
+    local_df.loc[:,:] = ''
+
+    for row, col in selections.items():
+        if col is not None:
+            local_df.loc[row, col] = 'background-color: yellow'
+
+    return local_df
