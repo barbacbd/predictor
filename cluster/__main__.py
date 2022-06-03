@@ -2,11 +2,12 @@ from inquirer import prompt, list_input, text
 import argparse
 from yaml import dump
 from os.path import exists
-from .r import CritSelection
-from .clusters import ClusterAlgorithm
-from .config import Config
+from cluster.r import CritSelection
+from cluster.clusters import ClusterAlgorithm
+from cluster.config import Config
 from multiprocessing import Process
-from .log import get_logger
+from cluster.log import get_logger
+import logging
 
 
 config_filename = "configuration.yaml"
@@ -39,10 +40,10 @@ def config(*args, **kwargs):
         log.debug(error)
         configuration_dict['max_number_of_clusters'] = 10
 
-    cluster_types = {x: str(x.name).replace("_", " ") for x in ClusterAlgorithm}
+    cluster_types = {x: str(x.name) for x in ClusterAlgorithm}
     cluster_algorithm = list_input(
         message='Select the cluster algorithm',
-        choices=["All"] + cluster_types
+        choices=list(cluster_types.values())
     )
 
     kmeans_type = None
@@ -51,7 +52,7 @@ def config(*args, **kwargs):
         configuration_dict['algorithm_settings'] = kmeans_type
     
     if cluster_algorithm == ClusterAlgorithm.ALL.name:
-        cluster_algorithm = cluster_types
+        cluster_algorithm = [x for x in cluster_types.values() if x != cluster_algorithm]
     else:
         cluster_algorithm = [cluster_algorithm]
 
@@ -59,7 +60,7 @@ def config(*args, **kwargs):
     # additional after configuration
     configuration_dict['cluster_algorithms'] = cluster_algorithm
     
-    cluster_crit_data = {x: str(x.name).replace("_", " ") for x in CritSelection}
+    cluster_crit_data = {x: str(x.name) for x in CritSelection}
     crit_algorithms = list_input(
         message='Slect the cluster crit algorithm(s)',
         choices=list(cluster_crit_data.values())
@@ -88,9 +89,10 @@ def execute(*args, **kwargs):
     '''Run ALL of the other functions'''
     log.info("Executing execute.")
     config(*args, **kwargs)
-    
+
+    log.debug("Setting config, parsing")
     config_obj = Config(config_filename)
-    config_instances = config.obj.instances
+    config_instances = config_obj.instances
 
     processes = []
     log.info("Creating %d processes to run workup ...", len(config_instances))
@@ -106,31 +108,20 @@ def main():
     '''Main entry point. The user will select the execution path
     through the argparse commands.
     '''
-    globals log
+    global log
     
-    parser = argparse.ArgumentParser(prog='docu')
-    parser.add_argument(
-        '-v', '--verbose',
-        action='count',
-        default=0,
-        help='Verbosity level for logging'
-    )
+    parser = argparse.ArgumentParser(prog='cluster')
     subparsers = parser.add_subparsers(dest='command')
     subparsers.required = True
 
-    config = subparsers.add_parser(
-        'config',
-        help="Create the configuration file"
-    )
+    config = subparsers.add_parser('config', help="Create the configuration file")
+    config.add_argument('-v', '--verbose', action='count', default=0, help='Log verbosity')
     
-    feast = subparsers.add_parser(
-        'feast',
-        help="Feature Selection"
-    )
-    execute = subparsers.add_parser(
-        'execute',
-        help="Execute all stages"
-    )
+    feast = subparsers.add_parser('feast', help="Feature Selection")
+    feast.add_argument('-v', '--verbose', action='count', default=0, help='Log verbosity')
+        
+    execute = subparsers.add_parser('execute',help="Execute all stages")
+    execute.add_argument('-v', '--verbose', action='count', default=0, help='Log verbosity')
 
     args = parser.parse_args()
 

@@ -15,7 +15,7 @@ def process_clusters(clusters):
     :param clusters: list of cluster values
     :return: min, max number of clustes
     '''
-    if not isinstance(clusters, list):
+    if not isinstance(clusters, (list, tuple)):
         raise AttributeError
 
     # never be less than 0 but you never know
@@ -164,7 +164,7 @@ class Config:
         if "max_number_of_clusters" in yaml_data:
             try:
                 _, self.max_clusters = process_clusters(
-                    Config.min_clusters, int(yaml_data["max_number_of_clusters"]))
+                    (Config.min_clusters, int(yaml_data["max_number_of_clusters"])))
             except ValueError as error:
                 #log.debug(error)
                 pass

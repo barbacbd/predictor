@@ -30,3 +30,6 @@ RUN python3 -m pip install pip --upgrade
 
 # install the project requirements
 RUN python3 -m pip install -r cluster/requirements.txt
+
+RUN git config --global user.email "barbacbd@dukes.jmu.edu"
+RUN git config --global user.name "Brent Barbachem"
