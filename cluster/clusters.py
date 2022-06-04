@@ -168,8 +168,8 @@ class ClusterAlgorithm(Enum):
             cls.KDE: kde
         }
         
-        if algorithm in self:
-            if algoritm == cls.ALL:
+        if algorithm in cls:
+            if algorithm == cls.ALL:
                 return list(func_dict.values())
             else:
                 funcs.append(func_dict.get(algorithm))

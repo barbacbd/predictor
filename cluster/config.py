@@ -3,8 +3,9 @@ from os.path import exists
 import pandas as pd
 from yaml import safe_load
 from .clusters import ClusterAlgorithm
-from .r import CritSelection
+from .r import CritSelection, crit
 from .file import create_output_file, read_data, highlight_selections
+from .selection import metricChoices
 
 
 def process_clusters(clusters):
@@ -88,8 +89,12 @@ class ConfigInstance:
         excel_filename = create_output_file(self.filename)
 
         cluster_creation_algorithm_funcs = self.provision_cluster_algorithms()
+
+        data_set = read_data(self.filename)
+        if data_set is None:
+            return
         
-        with pd.ExcelWriter(excel_file, engine='xlsxwriter') as w:
+        with pd.ExcelWriter(excel_filename, engine='xlsxwriter') as w:
             # each sheet in the file will be named for the type of cluster algorithm
             for sheet_name, func in cluster_creation_algorithm_funcs.items():
                 excel_dict = {}
@@ -99,7 +104,7 @@ class ConfigInstance:
                 cloned_df = None
             
                 # batch these results
-                for cluster_num in range(self.min_cluster, self.max_cluster+1):
+                for cluster_num in range(self.min_clusters, self.max_clusters+1):
                     matching_clusters = func(data_set, cluster_num, **self.algorithm_extras)
                     crit_output = crit(data_set, matching_clusters, cluster_num)
                 
