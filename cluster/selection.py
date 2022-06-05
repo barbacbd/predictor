@@ -87,7 +87,7 @@ def df_max(row):
 # The dictionary of Algorithms with the name/kind of function
 # that should be applied to the entire set of outcomes for 
 # clusters k (Ex: k = 2 ... 50)
-metricChoices = {
+MetricChoices = {
     "Ball_Hall": df_max_diff,
     "Banfeld_Raftery": df_min,
     "C_index": df_min,
@@ -120,13 +120,13 @@ metricChoices = {
 
 def select(df):
     """
-    For each algorithm in `metricChoices` run the function
+    For each algorithm in `MetricChoices` run the function
     that should be applied for the algorithm on the row in the dataframe.
     The column that is the result of the function is saved and the 
     dictionary of the algorithm with the column name (cluster) is returned.
 
     :param df: Pandas dataframe containing the metrics as the index from the 
-    `metricChoices`.
+    `MetricChoices`.
 
     :return: dictionary of algorithms (key) to their resulting column (cluster). 
     It is possible for `None` to be in the resultant value field.
@@ -151,7 +151,7 @@ def select(df):
         # Get the function associated with the row (algorithm)
         # if this is a function and not some mistake, run the function
         # and store the result.
-        func = metricChoices.get(idx, None)
+        func = MetricChoices.get(idx, None)
 
         if callable(func):
             ret = func(row)
