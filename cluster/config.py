@@ -3,8 +3,13 @@ from os.path import exists
 import pandas as pd
 from yaml import safe_load
 from .clusters import ClusterAlgorithm
-from .r import CritSelection
+from .r import CritSelection, crit
 from .file import create_output_file, read_data, highlight_selections
+from .selection import MetricChoices, select as metric_selection
+from .log import get_logger
+
+
+log = get_logger()
 
 
 def process_clusters(clusters):
@@ -68,9 +73,9 @@ class ConfigInstance:
         for cluster_algorithm in self.cluster_algorithms:
             funcs = ClusterAlgorithm.list_functions(cluster_algorithm)
             if len(funcs) > 1:
-                print(f"Too many functions returned for {cluster_algorithm.name}")
+                log.warning("Too many functions returned for %s", cluster_algorithm.name)
             elif len(funcs) == 0:
-                print(f"No functions returned for {cluster_algorithm.name}")
+                log.warning("No functions returned for %s", cluster_algorithm.name)
             else:
                 cluster_creation_algorithm_funcs[cluster_algorithm.name] = funcs[0]
 
@@ -85,13 +90,19 @@ class ConfigInstance:
         
         :return: Name of the excel file that was created.
         '''
+        log.info("Running workup on %s", self.filename)
         excel_filename = create_output_file(self.filename)
 
         cluster_creation_algorithm_funcs = self.provision_cluster_algorithms()
+
+        data_set = read_data(self.filename)
+        if data_set is None:
+            return
         
-        with pd.ExcelWriter(excel_file, engine='xlsxwriter') as w:
+        with pd.ExcelWriter(excel_filename, engine='xlsxwriter') as w:
             # each sheet in the file will be named for the type of cluster algorithm
             for sheet_name, func in cluster_creation_algorithm_funcs.items():
+                log.debug("Executing %s for %s", sheet_name, self.filename)
                 excel_dict = {}
                 cluster_dict = {}
 
@@ -99,7 +110,8 @@ class ConfigInstance:
                 cloned_df = None
             
                 # batch these results
-                for cluster_num in range(self.min_cluster, self.max_cluster+1):
+                for cluster_num in range(self.min_clusters, self.max_clusters+1):
+                    log.debug("Creating %d clusters, executing %s for %s", cluster_num, sheet_name, self.filename)
                     matching_clusters = func(data_set, cluster_num, **self.algorithm_extras)
                     crit_output = crit(data_set, matching_clusters, cluster_num)
                 
@@ -110,22 +122,24 @@ class ConfigInstance:
                     
                     # save the result of the algorithms as well as the clusters for 
                     # cluster K .
+                    log.debug("Crit algorithms")
                     excel_dict[cluster_num] = crit(data_set, matching_clusters, cluster_num)
                     cluster_dict[cluster_num] = matching_clusters
         
                 # drop the names from the dataframe that we don't want. 
-                for idx in set(cloned_df.index) - set(list(metricChoices.keys())):
+                for idx in set(cloned_df.index) - set(list(MetricChoices.keys())):
                     cloned_df.drop(index=idx, inplace=True)
 
-                selections = metricSelection(cloned_df)
+                selections = metric_selection(cloned_df)
 
-                # add the function type from the `metricChoices` dictionary, do a little magic for display
-                cloned_df["Function"] = [y.__name__.replace("df_", "").replace("_", " ") for x,y in metricChoices.items()]
+                # add the function type from the `MetricChoices` dictionary, do a little magic for display
+                cloned_df["Function"] = [y.__name__.replace("df_", "").replace("_", " ") for x,y in MetricChoices.items()]
 
                 # highlight the row/column pairs where the results were found
                 cloned_df.style.apply(highlight_selections, selections=selections, axis=None).to_excel(w, sheet_name=sheet_name)
 
                 # write all of the cluster information to another sheet
+                log.info("Adding sheet %s to %s", sheet_name, self.filename)
                 pd.DataFrame(cluster_dict).to_excel(w, sheet_name=sheet_name + "_clusters")
 
 
@@ -160,34 +174,33 @@ class Config:
             for fname in yaml_data["filenames"]:
                 if exists(fname):
                     self.filenames.append(fname)
+                else:
+                    log.debug("%s does not exist, skipping config", fname)
         
         if "max_number_of_clusters" in yaml_data:
             try:
                 _, self.max_clusters = process_clusters(
                     (Config.min_clusters, int(yaml_data["max_number_of_clusters"])))
             except ValueError as error:
-                #log.debug(error)
-                pass
+                log.debug(error)
         
         if "cluster_algorithms" in yaml_data:
             for cluster_algorithm in yaml_data["cluster_algorithms"]:
                 try:
                     self.cluster_algorithms.append(ClusterAlgorithm[cluster_algorithm])
                 except ValueError as error:
-                    #log.debug(error)
-                    pass
-        
+                    log.debug(error)
+                            
         if "crit_algorithms" in yaml_data:
             for crit_algorithm_type in yaml_data["crit_algorithms"]:
                 try:
                     self.crit_algorithms.append(CritSelection[crit_algorithm_type])
                 except ValueError as error:
-                    #log.debug(error)
-                    pass
-
+                    log.debug(error)
+                    
         if "algorithm_settings" in yaml_data:
             self.algorithm_extras["init"] = yaml_data["algorithm_settings"]
-
+            
     @property
     def cluster_sizes(self):
         '''Get the max and min cluster sizes

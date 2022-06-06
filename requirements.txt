@@ -7,3 +7,4 @@ kmeans1d
 jenkspy
 pyyaml
 inquirer
+xlsxwriter
