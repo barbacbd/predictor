@@ -24,13 +24,13 @@ RUN chmod -R 600 /root/.ssh
 RUN ssh-keyscan -t rsa github.com >> /root/.ssh/known_hosts
 
 # Grab the lastest package source.
-RUN git clone git@github.com:{{ USER }}/cluster.git
+RUN git clone git@github.com:{{ USER }}/predictor.git
 
 # upgrade pip
 RUN python3 -m pip install pip --upgrade
 
 # install the project requirements
-RUN python3 -m pip install -r cluster/requirements.txt
+RUN python3 -m pip install -r predictor/requirements.txt
 
 RUN git config --global user.email "{{ EMAIL }}"
 RUN git config --global user.name "{{ FULLNAME }}"

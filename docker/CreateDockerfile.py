@@ -1,8 +1,9 @@
 from os import listdir, remove, rename
-from os.path import exists
+from os.path import exists, isdir
 from inquirer import prompt, list_input, text, password
 from jinja2 import Environment, FileSystemLoader, Template
 from shutil import copyfile
+from getpass import getuser
 
 """
 HOW TO:
@@ -33,9 +34,12 @@ The artifacts of running this script include:
 # assumes that the current user is the one 
 docker_key_file_name = "id_rsa"
 
+file_dir = f"/home/{getuser()}/.ssh"
+if not isdir(file_dir):
+    file_dir = text(message="Path to ssh key files")
+
 # prompt the user for some input
 # The file directory should be the full path to the files: /home/USER/.ssh
-file_dir = text(message="Path to ssh key files")
 keyfile = list_input(message='Select your ssh key file', choices=listdir(file_dir))
 user = text(message="git username")
 email = text(message="git email")
