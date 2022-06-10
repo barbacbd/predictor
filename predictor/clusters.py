@@ -1,13 +1,13 @@
-from numpy import loadtxt, asarray, apply_along_axis, argsort, argsort, zeros, std, linspace, less, greater
-from sklearn.cluster import k_means
 from copy import copy
-from math import ceil
-import pandas as pd
-import jenkspy
-from sklearn.neighbors import KernelDensity
-from scipy.signal import argrelextrema
-from kmeans1d import cluster as kmeans1dc
 from enum import Enum
+import jenkspy
+from kmeans1d import cluster as kmeans1dc
+from math import ceil
+from numpy import loadtxt, asarray, apply_along_axis, argsort, argsort, zeros, std, linspace, less, greater
+import pandas as pd
+from scipy.signal import argrelextrema
+from sklearn.cluster import k_means
+from sklearn.neighbors import KernelDensity
 
 
 def k_means_wrapper(data_set, k, *args, **kwargs):

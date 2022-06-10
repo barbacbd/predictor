@@ -1,12 +1,12 @@
+from enum import Enum
+import inspect
+import pandas as pd
 from rpy2 import robjects
 from rpy2.robjects.vectors import FloatVector
 from rpy2.robjects.packages import importr, isinstalled
 from rpy2.robjects import numpy2ri
 from rpy2.robjects.vectors import StrVector
-import pandas as pd
 from threading import Lock
-from enum import Enum
-import inspect
 
 
 class RInterface(object):

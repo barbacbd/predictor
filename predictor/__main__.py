@@ -1,13 +1,13 @@
-from inquirer import prompt, list_input, text
 import argparse
-from yaml import dump
-from os.path import exists
-from cluster.r import CritSelection
-from cluster.clusters import ClusterAlgorithm
-from cluster.config import Config
-from multiprocessing import Process
-from cluster.log import get_logger
 import logging
+from inquirer import prompt, list_input, text
+from multiprocessing import Process
+from os.path import exists
+from yaml import dump
+from predictor.clusters import ClusterAlgorithm
+from predictor.config import Config
+from predictor.log import get_logger
+from predictor.r import CritSelection
 
 
 config_filename = "configuration.yaml"

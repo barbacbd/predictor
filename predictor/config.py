@@ -3,10 +3,10 @@ from os.path import exists
 import pandas as pd
 from yaml import safe_load
 from .clusters import ClusterAlgorithm
-from .r import CritSelection, crit
 from .file import create_output_file, read_data, highlight_selections
-from .selection import MetricChoices, select as metric_selection
 from .log import get_logger
+from .r import CritSelection, crit
+from .selection import MetricChoices, select as metric_selection
 
 
 log = get_logger()
