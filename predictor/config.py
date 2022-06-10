@@ -1,5 +1,5 @@
 from fileinput import filename
-from os.path import exists
+from os.path import exists, join
 import pandas as pd
 from yaml import safe_load
 from .clusters import ClusterAlgorithm
@@ -7,6 +7,7 @@ from .file import create_output_file, read_data, highlight_selections
 from .log import get_logger
 from .r import CritSelection, crit
 from .selection import MetricChoices, select as metric_selection
+from .feature_selection import FeatureSelectionType
 
 
 log = get_logger()
@@ -39,6 +40,9 @@ class ConfigInstance:
     '''A ConfigInstance is a set of data required to run a full set of
     workups using the cluster crit and cluster algorithms on a filename
     '''
+    
+    WorkupDirectory = "cluster_results"
+    
     def __init__(
         self, 
         filename, 
@@ -91,7 +95,7 @@ class ConfigInstance:
         :return: Name of the excel file that was created.
         '''
         log.info("Running workup on %s", self.filename)
-        excel_filename = create_output_file(self.filename)
+        excel_filename = join(ConfigInstance.WorkupDirectory, create_output_file(self.filename))
 
         cluster_creation_algorithm_funcs = self.provision_cluster_algorithms()
 
@@ -157,6 +161,7 @@ class Config:
         self.cluster_algorithms = []
         self.crit_algorithms = []
         self.algorithm_extras = {}
+        self.selected_features = []
         
         if filename is not None:
             self.consume(filename)
@@ -200,7 +205,14 @@ class Config:
                     
         if "algorithm_settings" in yaml_data:
             self.algorithm_extras["init"] = yaml_data["algorithm_settings"]
-            
+        
+        if "selected_features" in yaml_data:
+            for feature_type in yaml_data["selected_features"]:
+                try:
+                    self.selected_features.append(FeatureSelectionType[feature_type])
+                except ValueError as error:
+                    log.debug(error)
+        
     @property
     def cluster_sizes(self):
         '''Get the max and min cluster sizes
