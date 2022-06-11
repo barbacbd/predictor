@@ -21,7 +21,7 @@ python3 CreateDockerfile.py
 ```
 
 The python script listed [above](./CreateDockerfile.py) will prompt you for all of the required information to build a Dockerfile that will create the image.
-After executing the script the directory will contain a `Dockerfile` and the `id_rsa` file that contains the secret key. 
+After executing the script the directory will contain a `Dockerfile` and the `id_rsa` file that contains the **secret** key. 
 
 **Note**: _You **must** have python3.6 or greater installed_.
 
@@ -31,10 +31,10 @@ After executing the script the directory will contain a `Dockerfile` and the `id
 
 
 ```bash
-podman build . -t cluster:latest
+podman build . -t predictor:latest
 ```
 
-_If you wish to call your image something other than `cluster`, change the name `cluster` above to your preferred name_.
+_If you wish to call your image something other than `predictor`, change the name `predictor` above to your preferred name_.
 
 
 # Creating the image
@@ -49,7 +49,7 @@ You _should_ receive an output such as:
 
 ```bash
 REPOSITORY                          TAG          IMAGE ID      CREATED        SIZE
-localhost/cluster                   latest       8eaeb0d43eed  2 days ago     3.18 GB
+localhost/predictor                 latest       8eaeb0d43eed  2 days ago     3.18 GB
 ```
 
 If your output looks similar to below, then your image was **not** created successfully. If/When this occurs, please look carefully at
@@ -62,17 +62,17 @@ REPOSITORY                          TAG          IMAGE ID      CREATED        SI
 
 # Running the container
 
-Create a bridge between your host and the container. I have selected a directory called `cluster_output`, but you may choose a different name.
+Create a bridge between your host and the container. I have selected a directory called `predictor_output`, but you may choose a different name.
 
 ```bash
-mkdir cluster_output
+mkdir predictor_output
 ```
 
 
 After your image was created, you can create the container as below:
 
 ```bash
-podman run -it --privileged -v ${PWD}/cluster_output:/cluster_output cluster:latest /bin/bash
+podman run -it --privileged -v ${PWD}/predictor_output:/predictor_output predictor:latest /bin/bash
 ```
 
 This will execute the container and enter you into the container. _Any file(s) that you wish to share between the host and container should be
