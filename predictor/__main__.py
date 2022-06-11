@@ -5,11 +5,11 @@ from multiprocessing import Process
 from os import listdir
 from os.path import exists, join
 from yaml import dump
-from predictor.clusters import ClusterAlgorithm
+from predictor.clusters.cluster_algorithms import ClusterAlgorithm
 from predictor.config import Config, ConfigInstance
 from predictor.log import get_logger
-from predictor.r import CritSelection
-from predictor.feature_selection import FeatureSelectionType, select_features
+from predictor.clusters.r import CritSelection
+from predictor.features.feature_selection import FeatureSelectionType, select_features
 
 
 config_filename = "configuration.yaml"
