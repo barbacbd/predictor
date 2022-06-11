@@ -2,12 +2,12 @@ from fileinput import filename
 from os.path import exists, join
 import pandas as pd
 from yaml import safe_load
-from .clusters import ClusterAlgorithm
+from .clusters.cluster_algorithms import ClusterAlgorithm
 from .file import create_output_file, read_data, highlight_selections
 from .log import get_logger
-from .r import CritSelection, crit
-from .selection import MetricChoices, select as metric_selection
-from .feature_selection import FeatureSelectionType
+from .clusters.r import CritSelection, crit
+from .clusters.selection import MetricChoices, select as metric_selection
+from .features.feature_selection import FeatureSelectionType
 
 
 log = get_logger()
