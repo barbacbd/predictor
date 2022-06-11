@@ -63,8 +63,7 @@ class RInterface(object):
         return cls._instance
 
     def __call__(self, *args, **kwargs):
-        """
-        Allow the caller to access the cluster crit package from R.
+        '''Allow the caller to access the cluster crit package from R.
 
         :param data_set: Original Data set
         :param labels: Array/List type object that contains (in order of the original data set)
@@ -74,7 +73,7 @@ class RInterface(object):
         
         :return: Pandas Dataframe where the column is the number k (provided) and the rows
         are the algorithms run within the cluster crit package
-        """
+        '''
         with self._lock:
             func_name = inspect.stack()[1][3]
             if func_name in robjects.globalenv:
@@ -85,8 +84,7 @@ class RInterface(object):
 
 
 def crit(data_set, labels, k):
-    """
-    Allow the caller to access the cluster crit package from R.
+    '''Allow the caller to access the cluster crit package from R.
 
     :param data_set: Original Data set
     :param labels: Array/List type object that contains (in order of the original data set)
@@ -96,34 +94,32 @@ def crit(data_set, labels, k):
     
     :return: Pandas Dataframe where the column is the number k (provided) and the rows
     are the algorithms run within the cluster crit package
-    """
+    '''
     r = RInterface()
     applied_data, crit_algorithms = r(data_set, labels)
     return pd.DataFrame(applied_data, index=crit_algorithms, columns=[str(k)])
 
 
 def cacc(df):
-    """
-    Class-Attribute Contingency Coefficient. Discretization Algorithm
+    '''Class-Attribute Contingency Coefficient. Discretization Algorithm
     
     See `https://www.rdocumentation.org/packages/discretization/versions/1.0-1/topics/cacc` 
     
     :param df: 
     
     :return:    
-    """
+    '''
     r = RInterface()
     ret = r(df)
     return ret
 
 
 class CritSelection(Enum):
-    """
-    All possible values that the Cran (R) package Cluster Crit can receive
+    '''All possible values that the Cran (R) package Cluster Crit can receive
     for the intCriteria. The `ALL` type is handled slightly differently as
     it should be the extension of only the valid values in this enumeration
     rather than `ALL` in cluster crit.
-    """
+    '''
 
     ALL = 0
     Ball_Hall = 1
@@ -156,10 +152,9 @@ class CritSelection(Enum):
 
 
 def selection_as_str(selection):
-    """
-    Turn the Selection into a string. The special case is for 
+    '''Turn the Selection into a string. The special case is for 
     `ALL` as it returns the combined string for all other values.
-    """
+    '''
     if not isinstance(selection, CritSelection):
         raise TypeError("selection expects %s, received %s" % (str(type(CritSelection)), str(type(selection))))
 

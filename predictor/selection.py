@@ -2,15 +2,14 @@ from numpy import inf, nan
 
 
 def check_for_singletons(df):
-    """
-    Check the dataframe consisting of cluster numbers attached to each datapoint.
+    '''Check the dataframe consisting of cluster numbers attached to each datapoint.
     Each column should be the number of clusters that the algorithm(s) were run 
     against.
     
     :param df: pandas dataframe. (see above)
     :return: Dictionary where the key is the column (K), a value of true indicates
     that the column contains singleton cluster
-    """
+    '''
 
     singleton_cols = {}
     for column_name in df.columns.values.tolist():
@@ -23,8 +22,7 @@ def check_for_singletons(df):
 
 
 def df_min_diff(row):
-    """
-    The function is applied to columns start + 1 - n
+    '''The function is applied to columns start + 1 - n
 
     For instance columns 2 to 50 would apply the data to 
 
@@ -33,7 +31,7 @@ def df_min_diff(row):
 
     :param df: Pandas Dataframe row
     :return: Column number where the value contains the min difference
-    """
+    '''
     local_min_idx = None
     local_min_value = None
 
@@ -47,8 +45,7 @@ def df_min_diff(row):
     return local_min_idx  # column containing min diff
 
 def df_max_diff(row):
-    """
-    The function is applied to columns start + 1 - n
+    '''The function is applied to columns start + 1 - n
 
     For instance columns 2 to 50 would apply the data to 
 
@@ -57,7 +54,7 @@ def df_max_diff(row):
 
     :param df: Pandas Dataframe row
     :return: Column number where the value contains the max difference
-    """
+    '''
     local_max_idx = None
     local_max_value = None
 
@@ -71,17 +68,19 @@ def df_max_diff(row):
     return local_max_idx  # column containing max diff
 
 def df_min(row):
-    """
+    '''Find the min in the Dataframe row
+
     :param row: Pandas dataframe row
     :return: column name of the min value in the row 
-    """
+    '''
     return row.idxmin()
 
 def df_max(row):
-    """
+    '''Find the max in the dataframe row
+
     :poaram row: Pandas dataframe row
     :return: Column name of the max value in the row
-    """
+    '''
     return row.idxmax()
 
 # The dictionary of Algorithms with the name/kind of function
@@ -119,8 +118,7 @@ MetricChoices = {
 
 
 def select(df):
-    """
-    For each algorithm in `MetricChoices` run the function
+    '''For each algorithm in `MetricChoices` run the function
     that should be applied for the algorithm on the row in the dataframe.
     The column that is the result of the function is saved and the 
     dictionary of the algorithm with the column name (cluster) is returned.
@@ -130,7 +128,7 @@ def select(df):
 
     :return: dictionary of algorithms (key) to their resulting column (cluster). 
     It is possible for `None` to be in the resultant value field.
-    """
+    '''
 
     # don't modify the supplied dataframe
     df_copy = df.copy(deep=True)
