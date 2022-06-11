@@ -11,8 +11,7 @@ from sklearn.neighbors import KernelDensity
 
 
 def k_means_wrapper(data_set, k, *args, **kwargs):
-    """
-    The function will call the kmeans algorithm for data where the 
+    '''The function will call the kmeans algorithm for data where the 
     dimensions are greater than 1, while the kmeans1d algorithm will be
     used for 1-dimensional data. While kmeans can be applied to data of
     any number of dimensions, 1-D data is a special case and should be handled
@@ -25,7 +24,7 @@ def k_means_wrapper(data_set, k, *args, **kwargs):
 
     :param init: Applies ONLY to data that has more than one dimension. The 
     `init` should be used to pass the data kmeans. 
-    """
+    '''
 
     rows, cols = data_set.shape
 
@@ -45,8 +44,7 @@ def k_means_wrapper(data_set, k, *args, **kwargs):
 
 
 def x_bins(data_set, k, *args, **kwargs):
-    """
-    Create K number of even width'd bins. Find the max
+    '''Create K number of even width'd bins. Find the max
     and min values in the dataset. Divide the space between
     max and min into k bins.
 
@@ -54,7 +52,7 @@ def x_bins(data_set, k, *args, **kwargs):
     :param k: Number of bins or clusters
 
     :return: cluster numbers in order for the original dataset
-    """
+    '''
     mn = data_set.min()
     diff = data_set.max() - mn
     bin_range = diff / k
@@ -75,14 +73,13 @@ def x_bins(data_set, k, *args, **kwargs):
 
 
 def e_bins(data_set, k, *args, **kwargs):
-    """
-    Even numbers per k bins. This is more of a grouping than anything. Separate the
+    '''Even numbers per k bins. This is more of a grouping than anything. Separate the
     data into k number of bins where each bin has the same or close to the same number
     of entries.
     
     :param data_set: numpy array
     :param k: number of clusters
-    """
+    '''
     data_set_copy = copy(data_set)
     
     rows, cols = data_set.shape
@@ -96,8 +93,7 @@ def e_bins(data_set, k, *args, **kwargs):
 
 
 def natural_breaks(data_set, k, *args, **kwargs):
-    """
-    Implementation of the natural breaks or jenks_breaks algorithm
+    '''Implementation of the natural breaks or jenks_breaks algorithm
     on the 1-Dimensional dataset. The algorithm will attempt to 
     find the natural break points in the dataset. 
 
@@ -108,7 +104,7 @@ def natural_breaks(data_set, k, *args, **kwargs):
     :param k: number of clusters
 
     :return: `clusters` or groups of data 
-    """
+    '''
     df = pd.DataFrame(data_set, columns=["Data Points"])
     df.sort_values(by='Data Points')
     df['bin'] = pd.cut(
@@ -121,12 +117,11 @@ def natural_breaks(data_set, k, *args, **kwargs):
     
 
 def kde(data_set, k, *args, **kwargs):
-    """
-    Kernel Density Estimation 
+    '''Kernel Density Estimation 
 
     Algorithm that is considered a great metric for 1-Dimensional
     `clustering`. 
-    """
+    '''
     raise NotImplementedError("KDE")  
     data_std = std(data_set)
 
