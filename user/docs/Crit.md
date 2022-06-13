@@ -1,6 +1,6 @@
 # Crit
 
-The following metrics were all taken from the [cluster crit](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/viewer.html?pdfurl=https%3A%2F%2Fcran.r-project.org%2Fweb%2Fpackages%2FclusterCrit%2FclusterCrit.pdf&clen=129366&chunk=true) package in `R` found [here](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/viewer.html?pdfurl=https%3A%2F%2Fcran.r-project.org%2Fweb%2Fpackages%2FclusterCrit%2FclusterCrit.pdf&clen=129366&chunk=true). This project includes both an [R](../../R/) package as well as a [python](../../cluster/r.py) interface to the crit algorithms.
+The following metrics were all taken from the [cluster crit](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/viewer.html?pdfurl=https%3A%2F%2Fcran.r-project.org%2Fweb%2Fpackages%2FclusterCrit%2FclusterCrit.pdf&clen=129366&chunk=true) package in `R` found [here](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/viewer.html?pdfurl=https%3A%2F%2Fcran.r-project.org%2Fweb%2Fpackages%2FclusterCrit%2FclusterCrit.pdf&clen=129366&chunk=true). To view more information about these algorithms see the [cluster crit documentation](./clusterCrit.pdf). 
 
 | Cluster Crit Metric | Criteria to determine optimal cluster |
 | ------------------- | ------------------------------------- |
