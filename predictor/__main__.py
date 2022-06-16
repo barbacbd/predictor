@@ -1,8 +1,9 @@
 import argparse
+from distutils import text_file
 import logging
 from inquirer import prompt, list_input, text
 from multiprocessing import Process
-from os import listdir, mkdir, chdir
+from os import listdir, mkdir, chdir, getcwd
 from os.path import exists, join
 from yaml import dump
 from predictor.clusters.cluster_algorithms import ClusterAlgorithm
@@ -30,9 +31,19 @@ def config(*args, **kwargs):
 
     # the configuration will only allow a user to add one filename
     # but if the user edits the file manually, more than one can be added
-    configuration_dict['filenames'] = []
-    filename = text(message='Path to file')
-    configuration_dict['filenames'].append(filename)
+    text_files_found = []
+    for fname in listdir(getcwd()):
+        if fname.endswith(".txt"):
+            text_files_found.append(fname.split("/")[-1])
+    
+    filename = ""
+    if text_files_found:
+        if len(text_files_found) > 1:
+            text_files_found.insert(0, "ALL")
+        filename = list_input(message='Filename(s)', choices=text_files_found)
+        if filename == "ALL":
+            filename = text_files_found[1:]
+        configuration_dict['filenames'] = filename
 
     # The number of clusters will be 2 - N
     number_of_clusters = text(message='Number of clusters')
