@@ -2,7 +2,7 @@ import argparse
 import logging
 from inquirer import prompt, list_input, text
 from multiprocessing import Process
-from os import listdir
+from os import listdir, mkdir, chdir
 from os.path import exists, join
 from yaml import dump
 from predictor.clusters.cluster_algorithms import ClusterAlgorithm
@@ -140,18 +140,9 @@ def main():
     global log
     
     parser = argparse.ArgumentParser(prog='cluster')
-    subparsers = parser.add_subparsers(dest='command')
-    subparsers.required = True
-
-    config = subparsers.add_parser('config', help="Create the configuration file")
-    config.add_argument('-v', '--verbose', action='count', default=0, help='Log verbosity')
-    
-    feast = subparsers.add_parser('feast', help="Feature Selection")
-    feast.add_argument('-v', '--verbose', action='count', default=0, help='Log verbosity')
-        
-    execute = subparsers.add_parser('execute',help="Execute all stages")
-    execute.add_argument('-v', '--verbose', action='count', default=0, help='Log verbosity')
-
+    parser.add_argument('command', help='Command to execute', choices=['config', 'feast', 'execute'])
+    parser.add_argument('-v', '--verbose', action='count', default=0, help='Log verbosity')
+    parser.add_argument('-d', '--dir', default='.', help='Directory where the executable will run.')
     args = parser.parse_args()
 
     # verbosity starts at 10 and moves to 50
@@ -162,7 +153,14 @@ def main():
 
     # setup the logger
     log = get_logger(verbosity)
-        
+    
+    if not exists(args.dir):
+        log.debug("Creating directory: %s", args.dir)
+        mkdir(args.dir)
+    
+    log.debug("Moving to %s", args.dir)
+    chdir(args.dir)
+    
     globals()[args.command](args)
 
 
