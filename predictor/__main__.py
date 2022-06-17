@@ -11,6 +11,7 @@ from predictor.config import Config, ConfigInstance
 from predictor.log import get_logger
 from predictor.clusters.r import CritSelection
 from predictor.features.feature_selection import FeatureSelectionType, select_features
+from predictor.clusters.artifacts import ClusterArtifact
 
 
 config_filename = "configuration.yaml"
@@ -103,31 +104,9 @@ def config(*args, **kwargs):
         data = dump(configuration_dict, yaml_file)
 
 
-def feast(*args, **kwargs):
-    '''Run the feature selection on the output of a previous step
-    '''
-    log.info("Executing FEAST.")
-
-    if not exists(config_filename):
-        log.error("Unable to find configuration file.")
-        return
-
-    # only reading again, because we are not garunteed to execute the full process        
-    config_obj = Config(config_filename)
-
-    # grab all excel files from the location where they were dumped
-    cluster_output_dir = ConfigInstance.WorkupDirectory
-    files = [join(cluster_output_dir, fname) 
-             for fname in listdir(cluster_output_dir) if fname.endswith(".xlsx")]
-    
-    select_features(files, config.selected_features)
-
-
-def execute(*args, **kwargs):
-    '''Run ALL of the other functions'''
-    log.info("Executing execute.")
-    config(*args, **kwargs)
-
+def cluster(*args, **kwargs):
+    '''Run the clustering algorithms'''
+    log.info("Executing cluster.")
     log.debug("Setting config, parsing")
     config_obj = Config(config_filename)
     config_instances = config_obj.instances
@@ -140,8 +119,49 @@ def execute(*args, **kwargs):
     log.info("Starting %d processes ...", len(config_instances))
     for process in processes:
         process.start()
+        
+
+def load_crit(*args, **kwargs):
+    '''Load cluster and crit algorithm artifacts'''
+    log.info("Executing load_crit.")
     
-    feast(*args, **kwargs)
+    
+    if not exists(ConfigInstance.WorkupDirectory):
+        log.error("Failed to find %s", ConfigInstance.WorkupDirectory)
+        return
+    
+    artifacts = []
+    dir = join(getcwd(), ConfigInstance.WorkupDirectory)
+    for fname in listdir(dir):
+        if fname.endswith(".xlsx"):
+            log.debug("Found %s", fname)
+            artifacts.append(ClusterArtifact(join(dir, fname)))
+
+    return artifacts
+
+def feast(*args, **kwargs):
+    '''Run the feature selection on the output of a previous step
+    '''
+    log.info("Executing FEAST.")
+
+    if not exists(config_filename):
+        log.error("Unable to find configuration file.")
+        return
+    
+    cluster(*args, **kwargs)
+    artifacts = load_crit(*args, **kwargs)
+
+
+def execute(*args, **kwargs):
+    '''Run ALL of the other functions'''
+    log.info("Executing execute.")
+    config(*args, **kwargs)
+
+    cluster(*args, **kwargs)
+
+    load_crit(*args, **kwargs)
+    
+    # feast(*args, **kwargs)
 
 
 def main():
@@ -151,7 +171,8 @@ def main():
     global log
     
     parser = argparse.ArgumentParser(prog='cluster')
-    parser.add_argument('command', help='Command to execute', choices=['config', 'feast', 'execute'])
+    parser.add_argument('command', help='Command to execute', 
+                        choices=['config', 'cluster','feast', 'execute'])
     parser.add_argument('-v', '--verbose', action='count', default=0, help='Log verbosity')
     parser.add_argument('-d', '--dir', default='.', help='Directory where the executable will run.')
     args = parser.parse_args()

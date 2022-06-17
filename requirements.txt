@@ -8,3 +8,5 @@ jenkspy
 pyyaml
 inquirer
 xlsxwriter
+xlrd
+openpyxl
