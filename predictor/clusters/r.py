@@ -9,95 +9,53 @@ from rpy2.robjects.vectors import StrVector
 from threading import Lock
 
 
-class RInterface(object):
+def init():
+    '''Initialize all R information that is required for this package.
+    Current R Functions:
+    - crit
+    '''
+    # R's utility package
+    utils = importr('utils')
+    utils.chooseCRANmirror(ind=1)
 
-    _instance = None
-    _lock = Lock()
+    # R package names
+    packnames = ('clusterCrit', 'cacc')
 
-    def __new__(cls, *args, **kwargs):
+    names_to_install = [x for x in packnames if not isinstalled(x)]
+    if len(names_to_install) > 0:
+        utils.install_packages(StrVector(names_to_install))
 
-        if not cls._instance:
-            with cls._lock:
-
-                cls._instance = super(RInterface, cls).__new__(cls, *args, **kwargs)
-
-                # R's utility package
-                utils = importr('utils')
-                utils.chooseCRANmirror(ind=1)
-        
-                # R package names
-                packnames = ('clusterCrit', 'cacc')
-            
-                names_to_install = [x for x in packnames if not isinstalled(x)]
-                if len(names_to_install) > 0:
-                    utils.install_packages(StrVector(names_to_install))
-    
-                # define the R function that this script will use
-                robjects.r(
-                    '''
-                    # function to utilize the clusterCrit package in R
-                    # the sklearn module from python does not contain all
-                    # matrics that we wish to test
-                    crit <- function(dataset, labels) {    
-                    # $cluster: Cluster of each observation
-                    # $centers: Cluster centers
-                    # $totss: Total sum of squares
-                    # $withinss: Within sum of square. The number of components return is equal to `k`
-                    # $tot.withinss: sum of withinss
-                    # $betweenss: total sum of square minus within sum of square
-                    # $size: number of observation within each cluster
-                    ccData <- clusterCrit::intCriteria(dataset, unlist(labels), "all")
-                    return(list(ccData, clusterCrit::getCriteriaNames(TRUE)))
-                    }
-                    
-                    # Add CACC here
-                    # ...
-                    '''
-                )
-        
-                # technically this is global but return the `alias` or the callable
-                # to the R function so that it can be used later
-                #cls._funcs['crit'] = robjects.globalenv['crit']
-                #cls._funcs['cacc'] = robjects.globalenv['cacc']
-
-        return cls._instance
-
-    def __call__(self, *args, **kwargs):
-        '''Allow the caller to access the cluster crit package from R.
-
-        :param data_set: Original Data set
-        :param labels: Array/List type object that contains (in order of the original data set)
-        the cluster number from 1-k where the data point aligns.
-        :param k: Number of clusters that the algorithm was run with. This is
-        provided for display/label purposes ONLY.
-        
-        :return: Pandas Dataframe where the column is the number k (provided) and the rows
-        are the algorithms run within the cluster crit package
+    # define the R function that this script will use
+    robjects.r(
         '''
-        with self._lock:
-            func_name = inspect.stack()[1][3]
-            if func_name in robjects.globalenv:
-                numpy2ri.activate()
-                ret = robjects.globalenv[func_name](*args)
-                numpy2ri.deactivate()
-                return ret
+        crit <- function(dataset, labels, criteria) {
+            ccData <- clusterCrit::intCriteria(dataset, unlist(labels), unlist(criteria))
+            return(ccData)
+        }
+        
+        # Add CACC here
+        # ...
+        '''
+    )
 
 
-def crit(data_set, labels, k):
+def crit(data_set, labels, criteria, k):
     '''Allow the caller to access the cluster crit package from R.
 
     :param data_set: Original Data set
     :param labels: Array/List type object that contains (in order of the original data set)
     the cluster number from 1-k where the data point aligns.
+    :param criteria: List of cluster crit selection algorithms as string names
     :param k: Number of clusters that the algorithm was run with. This is
     provided for display/label purposes ONLY.
     
     :return: Pandas Dataframe where the column is the number k (provided) and the rows
     are the algorithms run within the cluster crit package
     '''
-    r = RInterface()
-    applied_data, crit_algorithms = r(data_set, labels)
-    return pd.DataFrame(applied_data, index=crit_algorithms, columns=[str(k)])
+    numpy2ri.activate()
+    applied_data = robjects.globalenv['crit'](data_set, labels, criteria)
+    numpy2ri.deactivate()
+    return pd.DataFrame(applied_data, index=criteria, columns=[str(k)])
 
 
 def cacc(df):
@@ -109,8 +67,9 @@ def cacc(df):
     
     :return:    
     '''
-    r = RInterface()
-    ret = r(df)
+    numpy2ri.activate()
+    ret = robjects.globalenv['cacc'](df)
+    numpy2ri.deactivate()
     return ret
 
 
@@ -120,7 +79,6 @@ class CritSelection(Enum):
     it should be the extension of only the valid values in this enumeration
     rather than `ALL` in cluster crit.
     '''
-
     ALL = 0
     Ball_Hall = 1
     Banfeld_Raftery = 2
@@ -162,3 +120,7 @@ def selection_as_str(selection):
         ", ".join([x.name for x in CritSelection if x != CritSelection.ALL])
     else:
         return selection.name
+
+
+# intialize the R information
+init()

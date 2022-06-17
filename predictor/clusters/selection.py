@@ -1,4 +1,8 @@
 from numpy import inf, nan
+from ..log import get_logger
+
+
+log = get_logger()
 
 
 def check_for_singletons(df):
@@ -145,7 +149,6 @@ def select(df):
     ref_cols = df_copy.columns.values.tolist()
 
     for idx, row in df_copy.iterrows():
-
         # Get the function associated with the row (algorithm)
         # if this is a function and not some mistake, run the function
         # and store the result.

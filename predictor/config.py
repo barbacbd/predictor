@@ -1,4 +1,5 @@
 from fileinput import filename
+from os import mkdir
 from os.path import exists, join
 import pandas as pd
 from yaml import safe_load
@@ -95,6 +96,10 @@ class ConfigInstance:
         :return: Name of the excel file that was created.
         '''
         log.info("Running workup on %s", self.filename)
+        
+        if not exists(ConfigInstance.WorkupDirectory):
+            log.debug("Creating directory: %s", ConfigInstance.WorkupDirectory)
+            mkdir(ConfigInstance.WorkupDirectory)        
         excel_filename = join(ConfigInstance.WorkupDirectory, create_output_file(self.filename))
 
         cluster_creation_algorithm_funcs = self.provision_cluster_algorithms()
@@ -103,6 +108,7 @@ class ConfigInstance:
         if data_set is None:
             return
         
+        log.debug(self.crit_algorithms)
         with pd.ExcelWriter(excel_filename, engine='xlsxwriter') as w:
             # each sheet in the file will be named for the type of cluster algorithm
             for sheet_name, func in cluster_creation_algorithm_funcs.items():
@@ -117,7 +123,7 @@ class ConfigInstance:
                 for cluster_num in range(self.min_clusters, self.max_clusters+1):
                     log.debug("Creating %d clusters, executing %s for %s", cluster_num, sheet_name, self.filename)
                     matching_clusters = func(data_set, cluster_num, **self.algorithm_extras)
-                    crit_output = crit(data_set, matching_clusters, cluster_num)
+                    crit_output = crit(data_set, matching_clusters, self.crit_algorithms, cluster_num)
                 
                     if cloned_df is None:
                         cloned_df = crit_output
@@ -126,18 +132,15 @@ class ConfigInstance:
                     
                     # save the result of the algorithms as well as the clusters for 
                     # cluster K .
-                    log.debug("Crit algorithms")
-                    excel_dict[cluster_num] = crit(data_set, matching_clusters, cluster_num)
+                    # excel_dict[cluster_num] = crit(data_set, matching_clusters, self.crit_algorithms, cluster_num)
+                    excel_dict[cluster_num] = crit_output
                     cluster_dict[cluster_num] = matching_clusters
         
                 # drop the names from the dataframe that we don't want. 
-                for idx in set(cloned_df.index) - set(list(MetricChoices.keys())):
+                for idx in set(cloned_df.index) - set(self.crit_algorithms):
                     cloned_df.drop(index=idx, inplace=True)
 
                 selections = metric_selection(cloned_df)
-
-                # add the function type from the `MetricChoices` dictionary, do a little magic for display
-                cloned_df["Function"] = [y.__name__.replace("df_", "").replace("_", " ") for x,y in MetricChoices.items()]
 
                 # highlight the row/column pairs where the results were found
                 cloned_df.style.apply(highlight_selections, selections=selections, axis=None).to_excel(w, sheet_name=sheet_name)
@@ -176,7 +179,13 @@ class Config:
             yaml_data = safe_load(config_file)
         
         if "filenames" in yaml_data:
-            for fname in yaml_data["filenames"]:
+            
+            if not isinstance(yaml_data["filenames"], list):
+                filenames = [yaml_data["filenames"]]
+            else:
+                filenames = yaml_data["filenames"]
+            
+            for fname in filenames:
                 if exists(fname):
                     self.filenames.append(fname)
                 else:
@@ -199,7 +208,7 @@ class Config:
         if "crit_algorithms" in yaml_data:
             for crit_algorithm_type in yaml_data["crit_algorithms"]:
                 try:
-                    self.crit_algorithms.append(CritSelection[crit_algorithm_type])
+                    self.crit_algorithms.append(crit_algorithm_type)
                 except ValueError as error:
                     log.debug(error)
                     
