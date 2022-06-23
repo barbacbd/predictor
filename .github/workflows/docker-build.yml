@@ -1,0 +1,46 @@
+name: Docker
+
+# This workflow will attempt to create the docker image and ensure that it builds correctly
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10"]
+    steps:
+      - name: Set up Python
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: {{ matrix.python-version }}
+      
+      - name: Install Dependencies
+        run: |
+          python -m pip install -r docker/requirements.txt
+      
+      - name: Create Dockerfile
+        run: |
+          python -c '
+from jinja2 import Environment, FileSystemLoader, Template
+with open("docker/Dockerfile.j2", "r") as jfile:
+    template = Template(jfile.read())
+output = template.render({"USER": "barbacbd",	"EMAIL": "barbacbd@dukes.jmu.edu", "FULLNAME":	"Brent Barbachem"})
+with open("docker/Dockerfile", "w+") as ic:
+    ic.write(output)
+'
+
+      - name: Create RSA File
+        run: |
+          echo "$ID_RSA_DATA" > id_rsa
+        shell: bash
+        env:
+          ID_RSA_DATA: ${{secrets.ID_RSA_DATA}}
+
+      - name: Create Local Image
+        run: |
+          docker build docker test_cluster:latest
