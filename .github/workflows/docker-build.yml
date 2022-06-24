@@ -1,10 +1,4 @@
 # This workflow will attempt to create the docker image and ensure that it builds correctly
-
-#on:
-#  schedule:
-#    - cron: "*/5 * * * *"
-name: Docker
-
 on:
   push:
     branches: [ "master" ]
@@ -75,13 +69,12 @@ jobs:
           python test.py
           cd ..
       - name: Create RSA File
-        env:
-          ID_RSA_DATA: ${{secrets.ID_RSA_DATA}}
         run: |
           cd docker
-          echo "$ID_RSA_DATA" > id_rsa
+          echo "${{ secrets.ID_RSA_DATA }}" >> id_rsa
           cd ..
-        shell: bash
       - name: Create Local Image
         run: |
-          docker build . -t test_cluster:latest -f docker/Dockerfile
+          cd docker
+          docker build . -t test_cluster:latest
+          cd ..
