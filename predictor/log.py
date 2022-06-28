@@ -31,7 +31,7 @@ def get_logger(verbosity=logging.DEBUG):
     :param verbosity: Level of verbosity for the logger
     :return: logging.log formatted with the NauticalLogFormatter
     '''
-    log = logging.getLogger()
+    log = logging.getLogger('predictor')
 
     if not log.handlers:
         log.setLevel(verbosity)
