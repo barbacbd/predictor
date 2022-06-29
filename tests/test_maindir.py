@@ -8,6 +8,11 @@ import pytest
 import pandas as pd
 from os import remove
 from openpyxl import load_workbook
+from yaml import safe_dump
+from predictor.clusters.cluster_algorithms import ClusterAlgorithm
+from predictor.clusters.r import CritSelection
+from predictor.features.feature_selection import FeatureSelectionType
+from pathlib import Path
 
 
 def test_process_clusters_valid():
@@ -119,15 +124,90 @@ def test_highlighting_selections():
 
 def test_create_config_from_file_valid():
     '''Create a configuration from a valid file'''
+    yaml_data = {}
+    yaml_data["filenames"] = ["example.txt", "example2.txt"]
+    yaml_data["max_number_of_clusters"] = 40
+    yaml_data["cluster_algorithms"] = ["K_MEANS"]
+    yaml_data["algorithm_settings"] = "k-means++"
+    yaml_data["crit_algorithms"] = ["Ball_Hall", "Banfeld_Raftery"]
+    yaml_data["selected_features"] = ["CMIM", "BetaGamma"]
+
+    with open("test.yaml", "w+") as yaml_file:
+        safe_dump(yaml_data, yaml_file)
+    
+    c = Config("test.yaml")
+    
+    assert c.max_clusters == 40
+    # neither file exists, so None were added
+    assert len(c.filenames) == 0
+    assert c.cluster_algorithms == [ClusterAlgorithm.K_MEANS]
+    assert c.algorithm_extras["init"] == "k-means++"
+    assert c.crit_algorithms == [CritSelection.Ball_Hall, CritSelection.Banfeld_Raftery]
+    assert c.selected_features == [FeatureSelectionType.CMIM, FeatureSelectionType.BetaGamma]
+
+    remove("test.yaml")
+
+
+def test_create_config_from_file_valid_files():
+    '''Create a configuration from a valid file'''
+    Path("example.txt").touch()
+    Path("example2.txt").touch()
+    yaml_data = {}
+    yaml_data["filenames"] = ["example.txt", "example2.txt"]
+    yaml_data["max_number_of_clusters"] = 40
+    yaml_data["cluster_algorithms"] = ["K_MEANS"]
+    yaml_data["algorithm_settings"] = "k-means++"
+    yaml_data["crit_algorithms"] = ["Ball_Hall", "Banfeld_Raftery"]
+    yaml_data["selected_features"] = ["CMIM", "BetaGamma"]
+
+    with open("test.yaml", "w+") as yaml_file:
+        safe_dump(yaml_data, yaml_file)
+    
+    c = Config("test.yaml")
+    
+    assert c.max_clusters == 40
+    # neither file exists, so None were added
+    assert c.filenames == ["example.txt", "example2.txt"]
+    assert c.cluster_algorithms == [ClusterAlgorithm.K_MEANS]
+    assert c.algorithm_extras["init"] == "k-means++"
+    assert c.crit_algorithms == [CritSelection.Ball_Hall, CritSelection.Banfeld_Raftery]
+    assert c.selected_features == [FeatureSelectionType.CMIM, FeatureSelectionType.BetaGamma]
+    assert len(c.instances) == 2
+
+    remove("test.yaml")
+    remove("example.txt")
+    remove("example2.txt")
 
 
 def test_create_config_invalid_data():
     '''Create a configuration from invalid file data. Certain values 
     will be missing while some are valid/present in the file data.'''
+    yaml_data = {}
+    yaml_data["cluster_algorithms"] = ["K_MEANS"]
+    yaml_data["crit_algorithms"] = ["Ball_Hall", "Banfeld_Raftery"]
+    yaml_data["selected_features"] = ["CMIM", "BetaGamma"]
+
+    with open("test.yaml", "w+") as yaml_file:
+        safe_dump(yaml_data, yaml_file)
     
+    c = Config("test.yaml")
+
+    # default    
+    assert c.max_clusters == Config.min_clusters
+    assert len(c.filenames) == 0
+    assert len(c.algorithm_extras) == 0
+
+    # set values
+    assert c.cluster_algorithms == [ClusterAlgorithm.K_MEANS]
+    assert c.crit_algorithms == [CritSelection.Ball_Hall, CritSelection.Banfeld_Raftery]
+    assert c.selected_features == [FeatureSelectionType.CMIM, FeatureSelectionType.BetaGamma]
+
+    remove("test.yaml")
 
 
 def test_create_config_invalid_filename():
     '''file does not, exist. Configuration creation failure.'''
-
+    filename = join(dirname(abspath(__file__)), "DoesNotExist.yaml")
+    with pytest.raises(FileNotFoundError):
+        c = Config(filename)
 

@@ -159,7 +159,7 @@ class Config:
     min_clusters = 2
     
     def __init__(self, filename=None):
-        self.max_clusters = None
+        self.max_clusters = Config.min_clusters
         self.filenames = []
         self.cluster_algorithms = []
         self.crit_algorithms = []
@@ -208,7 +208,7 @@ class Config:
         if "crit_algorithms" in yaml_data:
             for crit_algorithm_type in yaml_data["crit_algorithms"]:
                 try:
-                    self.crit_algorithms.append(crit_algorithm_type)
+                    self.crit_algorithms.append(CritSelection[crit_algorithm_type])
                 except ValueError as error:
                     log.debug(error)
                     
