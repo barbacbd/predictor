@@ -109,6 +109,40 @@ try:
     }
 
 
+    def select_features(artifacts, feature_algorithms, num_features_to_select, weights=[]):
+        '''Run all of the feature algorithms for the cluster information stored in each artifact.
+        
+        :param artifacts: list of ClusterArtifact objects
+        :param feature_algorithms: List of FeatureSelectionTypes, each corresponds to a FEAST algorithm
+        :param num_features_to_select: Number of features to select. 
+        :param weights: optional ndarray containing the weight for all datapoints. only for weighted algorithms
+        :return: List of FeatureOutput objects
+        '''
+        outputs = []
+        
+        _feature_algorithms = []
+        for algorithm in feature_algorithms:
+            if algorithm not in TypeToFeastFunc:
+                log.error(f"Failed to find feast function matching {algorithm}")
+            else:
+                _feature_algorithms.append(algorithm)
+
+        errors = []
+        if len(_feature_algorithms) <= 0:
+            errors.append("No valid feature algorithms provided")
+        
+        # features are more than likely the crit algorithm and/or size of cluster 
+        if num_features_to_select <= 0:
+            errors.append("Number of features to select must be greater than 0")
+        
+        if len(errors) > 0:
+            for error in errors:
+                log.error(error)
+            return outputs
+        
+        # set the number of features to select to max min(num_features_to_select, columns in each dataframe)
+        
+
     def select_features(feature_selection_type, data, labels, num_features_to_select, weights=[]):
         '''Run the feature selection algorithm provided as an enumeration in the `feature_selection_type`.
         

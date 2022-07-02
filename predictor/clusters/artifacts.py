@@ -30,11 +30,14 @@ class ClusterArtifact:
         
         if filename is not None and exists(filename):
             log.debug("Attempting to create artifacts from %s", filename)
+            self.name = filename
             self.load_file(filename)
         else:
             if "data_frames" in kwargs:
                 self.data_frames = kwargs.get("data_frames")
                 self.load_from_dfs()
+            self.name = str(id(self))
+        log.info("Set name of artifact to %s", self.name)
     
     def load_file(self, filename):
         '''Load the artifact data from a file. The intended file must

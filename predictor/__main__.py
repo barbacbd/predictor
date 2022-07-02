@@ -1,13 +1,11 @@
 import argparse
-from distutils import text_file
 import logging
-from inquirer import prompt, list_input, text
-from multiprocessing import Process
+from inquirer import list_input, text
 from os import listdir, mkdir, chdir, getcwd
 from os.path import exists, join
 from yaml import dump
 from predictor.clusters.cluster_algorithms import ClusterAlgorithm
-from predictor.config import Config, ConfigInstance
+from predictor.config import Config, ClusterCreator
 from predictor.log import get_logger
 from predictor.clusters.r import CritSelection
 from predictor.features.feature_selection import FeatureSelectionType, select_features
@@ -113,29 +111,34 @@ def cluster(*args, **kwargs):
 
     processes = []
     log.info("Creating %d processes to run workup ...", len(config_instances))
+    
+    
+    artifacts = []
     for instance in config_instances:
-        processes.append(Process(target=instance.workup))
-
-    log.info("Starting %d processes ...", len(config_instances))
-    for process in processes:
-        process.start()
-        
+        instance.workup()
+        artifacts.extend(instance.generate_artifacts())
+    
+    log.info("Created artifacts ", artifacts)
+    return artifacts
+    
 
 def load_crit(*args, **kwargs):
     '''Load cluster and crit algorithm artifacts'''
     log.info("Executing load_crit.")
-    
-    
-    if not exists(ConfigInstance.WorkupDirectory):
-        log.error("Failed to find %s", ConfigInstance.WorkupDirectory)
+
+    if not exists(ClusterCreator.WorkupDirectory):
+        log.error("Failed to find %s", ClusterCreator.WorkupDirectory)
         return
     
     artifacts = []
-    dir = join(getcwd(), ConfigInstance.WorkupDirectory)
+    dir = join(getcwd(), ClusterCreator.WorkupDirectory)
     for fname in listdir(dir):
-        if fname.endswith(".xlsx"):
+        if fname.endswith(".json"):
             log.debug("Found %s", fname)
-            artifacts.append(ClusterArtifact(join(dir, fname)))
+            
+            cc = ClusterCreator()
+            cc.from_json(fname)
+            artifacts.append(cc)
 
     return artifacts
 
@@ -143,14 +146,17 @@ def feast(*args, **kwargs):
     '''Run the feature selection on the output of a previous step
     '''
     log.info("Executing FEAST.")
+    return
 
     if not exists(config_filename):
         log.error("Unable to find configuration file.")
         return
+    config_obj = Config(config_filename)
     
     cluster(*args, **kwargs)
     artifacts = load_crit(*args, **kwargs)
-
+    
+    feature_output = select_features(artifacts, config.selected_features)
 
 def execute(*args, **kwargs):
     '''Run ALL of the other functions'''
@@ -159,9 +165,7 @@ def execute(*args, **kwargs):
 
     cluster(*args, **kwargs)
 
-    load_crit(*args, **kwargs)
-    
-    # feast(*args, **kwargs)
+    feast(*args, **kwargs)
 
 
 def main():

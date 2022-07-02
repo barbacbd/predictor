@@ -1,23 +1,30 @@
 from codecs import open as copen
 from numpy import loadtxt
+from .log import get_logger
 
 
-def create_output_file(filename):
-    '''Given the original filename, create the output excel filename.
+log = get_logger()
+
+
+def create_output_file(filename, extension):
+    '''Provide the original filename and convert the name to 
+    use the extension provided. The filename will be local (no 
+    longer include the full path).
 
     :param filename: input file name
+    :param extension: new extension for the filename
     :return: output filename
     '''
-    # find just the filename
-    fn = filename.split("/")[-1]
+    if not filename:
+        log.error("Bad Filename: %s")
+        return None
 
-    # remove the extension
-    fn = fn.split(".")
-    if len(fn) > 1:
-        fn = fn[0]
-
-    # returning the excel spreadsheet name
-    return fn + "_analysis.xlsx"
+    if not extension:
+        log.error("Bad extension: %s")
+        return None
+    
+    split_fname = filename.split("/")[-1].split(".")
+    return ".".join(split_fname[:len(split_fname)-1] + [extension])
 
 
 def read_data(filename):
