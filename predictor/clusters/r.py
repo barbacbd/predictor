@@ -118,6 +118,4 @@ def selection_as_str(selection):
     else:
         return selection.name
 
-
-# intialize the R information
-init()
+    

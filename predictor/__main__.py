@@ -7,7 +7,7 @@ from yaml import dump
 from predictor.clusters.cluster_algorithms import ClusterAlgorithm
 from predictor.config import Config
 from predictor.log import get_logger
-from predictor.clusters.r import CritSelection
+from predictor.clusters.r import CritSelection, init as rinit
 from predictor.features.feature_selection import FeatureSelectionType, select_features
 from predictor.clusters.generator import ClusterCreator
 
@@ -130,6 +130,7 @@ def cluster(*args, **kwargs):
     '''Run the clustering algorithms'''
     log.info("Executing cluster.")
     log.debug("Setting config, parsing")
+    rinit()
     config_obj = Config(config_filename)
     config_instances = config_obj.instances
 
@@ -138,7 +139,7 @@ def cluster(*args, **kwargs):
         instance.workup()
         artifacts.extend(instance.generate_artifacts())
     
-    log.info("Created artifacts ", artifacts)
+    log.info("Created artifacts: %s", ", ".join(artifacts))
     return artifacts
     
 

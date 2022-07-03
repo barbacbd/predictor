@@ -185,6 +185,8 @@ class ClusterCreator:
         if data_set is None:
             log.error("Workup failed, no data set found ...")
             return
+
+        crit_algorithm_names = [x.name for x in self.crit_algorithms]
         
         # each sheet in the file will be named for the type of cluster algorithm
         for sheet_name, func in cluster_creation_algorithm_funcs.items():
@@ -199,7 +201,7 @@ class ClusterCreator:
             for cluster_num in range(self.min_clusters, self.max_clusters+1):
                 log.debug("Creating %d clusters, executing %s for %s", cluster_num, sheet_name, self.filename)
                 matching_clusters = func(data_set, cluster_num, **self.algorithm_extras)
-                crit_output = crit(data_set, matching_clusters, self.crit_algorithms, cluster_num)
+                crit_output = crit(data_set, matching_clusters, crit_algorithm_names, cluster_num)
             
                 if cloned_df is None:
                     cloned_df = crit_output
