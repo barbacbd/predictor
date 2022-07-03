@@ -1,17 +1,15 @@
 import argparse
 import logging
-from msilib.schema import Feature
-from multiprocessing.sharedctypes import Value
 from inquirer import list_input, text
 from os import listdir, mkdir, chdir, getcwd
 from os.path import exists, join
 from yaml import dump
 from predictor.clusters.cluster_algorithms import ClusterAlgorithm
-from predictor.config import Config, ClusterCreator
+from predictor.config import Config
 from predictor.log import get_logger
 from predictor.clusters.r import CritSelection
 from predictor.features.feature_selection import FeatureSelectionType, select_features
-from predictor.clusters.artifacts import ClusterArtifact
+from predictor.clusters.generator import ClusterCreator
 
 
 config_filename = "configuration.yaml"
@@ -135,10 +133,6 @@ def cluster(*args, **kwargs):
     config_obj = Config(config_filename)
     config_instances = config_obj.instances
 
-    processes = []
-    log.info("Creating %d processes to run workup ...", len(config_instances))
-    
-    
     artifacts = []
     for instance in config_instances:
         instance.workup()
