@@ -311,9 +311,9 @@ class Config:
                     self.crit_algorithms.append(CritSelection[crit_algorithm_type])
                 except ValueError as error:
                     log.debug(error)
-                    
-        if "algorithm_settings" in yaml_data:
-            self.algorithm_extras["init"] = yaml_data["algorithm_settings"]
+        
+        # grab all extra data
+        self.algorithm_extras = yaml_data.get("extras", {})
         
         if "selected_features" in yaml_data:
             for feature_type in yaml_data["selected_features"]:

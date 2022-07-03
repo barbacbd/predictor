@@ -1,5 +1,7 @@
 import argparse
 import logging
+from msilib.schema import Feature
+from multiprocessing.sharedctypes import Value
 from inquirer import list_input, text
 from os import listdir, mkdir, chdir, getcwd
 from os.path import exists, join
@@ -27,6 +29,7 @@ def config(*args, **kwargs):
         return
     
     configuration_dict = {}
+    configuration_dict["extras"] = {}
 
     # the configuration will only allow a user to add one filename
     # but if the user edits the file manually, more than one can be added
@@ -61,7 +64,7 @@ def config(*args, **kwargs):
     kmeans_type = None
     if cluster_algorithm in (ClusterAlgorithm.ALL.name, ClusterAlgorithm.K_MEANS.name):
         kmeans_type = list_input(message='kmeans usage', choices=['k-means++', 'random'])
-        configuration_dict['algorithm_settings'] = kmeans_type
+        configuration_dict["extras"]['init'] = kmeans_type
     
     if cluster_algorithm == ClusterAlgorithm.ALL.name:
         cluster_algorithm = [x for x in cluster_types.values() if x != cluster_algorithm]
@@ -88,9 +91,32 @@ def config(*args, **kwargs):
     
     feast_type = {x: str(x.name) for x in FeatureSelectionType}
     feast_algorithms = list_input(
-        message='Slect the feature selection algorithm(s)',
+        message='Select the feature selection algorithm(s)',
         choices=list(feast_type.values())
     )
+    
+    # dynamic values to be input in the event that BetaGamma is selected
+    if feast_algorithms in (
+        FeatureSelectionType.ALL.name,
+        FeatureSelectionType.BetaGamma.name,
+        FeatureSelectionType.discBetaGamma.name
+    ):
+        def beta_gamma(var):        
+            _var = text(message=f'{var} [0.0, 1.0]')
+            try:
+                _var = float(_var)
+                if 0.0 > _var > 1.0:
+                    log.warning("%s out of bounds: %f, setting to 1.0", var, _var)
+                    _var = 1.0
+                
+            except (TypeError, ValueError) as error:
+                log.error(error)
+                _var = 1.0
+            return _var
+            
+        configuration_dict["extras"]['beta'] = beta_gamma("beta")
+        configuration_dict["extras"]['gamma'] = beta_gamma("gamma")
+ 
     if feast_algorithms == FeatureSelectionType.ALL.name:
         feast_algorithms = [x for x in feast_type.values() if x != feast_algorithms]
     else:
