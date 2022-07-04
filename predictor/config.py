@@ -47,6 +47,7 @@ class Config:
         self.cluster_algorithms = []
         self.crit_algorithms = []
         self.algorithm_extras = {}
+        self.number_of_features = 0
         self.selected_features = []
         
         if filename is not None:
@@ -97,7 +98,8 @@ class Config:
         
         # grab all extra data
         self.algorithm_extras = yaml_data.get("extras", {})
-        
+
+        self.number_of_features = yaml_data.get("number_of_features", self.number_of_features)
         if "selected_features" in yaml_data:
             for feature_type in yaml_data["selected_features"]:
                 try:

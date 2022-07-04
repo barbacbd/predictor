@@ -121,6 +121,21 @@ def config(*args, **kwargs):
         feast_algorithms = [feast_algorithms]
 
     configuration_dict["selected_features"] = feast_algorithms
+
+    num_features = text(message='Number of features to select')
+    try:
+        num_features = int(num_features)
+        if num_features > len(feast_algorithms):
+            log.error("Number of features to select is greater than the number of feast algorithms.")
+        elif num_features <= 0:
+            log.error("Number of features to select must be positive.")
+            num_features = 2
+        num_features = min(num_features, len(feast_algorithms))
+        
+    except (TypeError, ValueError) as error:
+        log.error(error)
+        num_features = min(len(feast_algorithms), 2)
+    configuration_dict["number_of_features"] = num_features
     
     with open(config_filename, 'w') as yaml_file:
         data = dump(configuration_dict, yaml_file)
