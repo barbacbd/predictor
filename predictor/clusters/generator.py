@@ -167,7 +167,6 @@ class ClusterCreator:
         
         if "dataframes" in jdata:
             for title, df_json in jdata["dataframes"].items():
-                
                 # TODO: do we need to add orient='index'
                 self.dataframes[title] = pd.DataFrame.from_dict(df_json)
     
