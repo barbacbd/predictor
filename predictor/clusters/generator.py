@@ -21,7 +21,7 @@ class ClusterCreator:
     
     def __init__(
         self, 
-        filename, 
+        filename=None, 
         cluster_algorithms=[], 
         crit_algorithms=[], 
         min_clusters=0, 

@@ -5,7 +5,7 @@ from os.path import exists, join
 from predictor.config import Config
 from predictor.log import get_logger
 from predictor.clusters.r import init as rinit
-from predictor.features.feature_selection import select_features
+from predictor.features.feature_selection import FeatureSelector
 from predictor.clusters.generator import ClusterCreator
 
 
@@ -38,9 +38,12 @@ def cluster(*args, **kwargs):
     return artifacts
     
 
-def load_crit(*args, **kwargs):
-    '''Load cluster and crit algorithm artifacts'''
-    log.info("Executing load_crit.")
+def feast(*args, **kwargs):
+    '''Run the feature selection on the output of a previous step
+    '''
+    log.info("Executing FEAST.")
+
+    config_obj = Config(Config.output_filename)
 
     if not exists(ClusterCreator.WorkupDirectory):
         log.error("Failed to find %s", ClusterCreator.WorkupDirectory)
@@ -56,23 +59,26 @@ def load_crit(*args, **kwargs):
             cc.from_json(fname)
             artifacts.append(cc)
 
-    return artifacts
-
-def feast(*args, **kwargs):
-    '''Run the feature selection on the output of a previous step
-    '''
-    log.info("Executing FEAST.")
-    return
-
-    if not exists(config_filename):
-        log.error("Unable to find configuration file.")
+    if not artifacts:
+        log.error("No cluster data found.")
         return
-    config_obj = Config(config_filename)
+
+    feature_objs = []
+    for artifact in artifacts:
+        feature_objs.append(
+            FeatureSelector(
+                config_obj.selected_features,
+                config_obj.number_of_features,
+                dataframes=artifact.dataframes,
+                selections=artifact.selections,
+                # weights=
+                algorithm_extras=config_obj.algorithm_extras
+            )
+        )
     
-    cluster(*args, **kwargs)
-    artifacts = load_crit(*args, **kwargs)
-    
-    feature_output = select_features(artifacts, config.selected_features)
+    for feature_obj in feature_objs:
+        feature_obj.select_features()
+        feature_obj.generate_artifacts()
 
 def execute(*args, **kwargs):
     '''Run ALL of the other functions'''
