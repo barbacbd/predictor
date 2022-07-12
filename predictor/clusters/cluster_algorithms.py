@@ -144,7 +144,7 @@ class ClusterAlgorithm(Enum):
     X_BINS = 2
     E_BINS = 3
     NATURAL_BREAKS = 4
-#    KDE = 5
+    # KDE = 5
 
     @classmethod
     def list_functions(cls, algorithm):
@@ -160,7 +160,7 @@ class ClusterAlgorithm(Enum):
             cls.X_BINS: x_bins,
             cls.E_BINS: e_bins,
             cls.NATURAL_BREAKS: natural_breaks,
-#            cls.KDE: kde
+        #    cls.KDE: kde
         }
         
         if algorithm in cls:
