@@ -1,4 +1,5 @@
 from numpy import inf, nan
+from math import fabs
 from ..log import get_logger
 
 
@@ -43,7 +44,8 @@ def df_min_diff(row):
         if row[i] in (-inf, inf, nan) or row[i-1] in (-inf, inf, nan):
             continue
 
-        if local_min_value is None or row[i] - row[i-1] < local_min_value:
+        if local_min_value is None or fabs(row[i] - row[i-1]) < local_min_value:
+            local_min_value = fabs(row[i] - row[i-1])
             local_min_idx = i
 
     return local_min_idx  # column containing min diff
@@ -66,7 +68,8 @@ def df_max_diff(row):
         if row[i] in (-inf, inf, nan) or row[i-1] in (-inf, inf, nan):
             continue
 
-        if local_max_value is None or row[i] - row[i-1] > local_max_value:
+        if local_max_value is None or fabs(row[i] - row[i-1]) > local_max_value:
+            local_max_value = fabs(row[i] - row[i-1])
             local_max_idx = i
 
     return local_max_idx  # column containing max diff

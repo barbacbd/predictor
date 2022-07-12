@@ -2,8 +2,7 @@ from copy import copy
 from enum import Enum
 import jenkspy
 from kmeans1d import cluster as kmeans1dc
-from math import ceil
-from numpy import loadtxt, asarray, apply_along_axis, argsort, argsort, zeros, std, linspace, less, greater
+from numpy import asarray, apply_along_axis, std, linspace, less, greater
 import pandas as pd
 from scipy.signal import argrelextrema
 from sklearn.cluster import k_means
@@ -26,7 +25,11 @@ def k_means_wrapper(data_set, k, *args, **kwargs):
     `init` should be used to pass the data kmeans. 
     '''
 
-    rows, cols = data_set.shape
+    shape = data_set.shape
+    if len(shape) == 2:
+        rows, cols = shape
+    else:
+        cols = shape
 
     if cols == 1:
         matching_clusters, centroids = kmeans1dc(data_set, k)
@@ -57,7 +60,7 @@ def x_bins(data_set, k, *args, **kwargs):
     diff = data_set.max() - mn
     bin_range = diff / k
 
-    bins = [(mn+(bin_range*i), mn+(bin_range*(i+1))) for i in range(k+1)]
+    bins = [(mn+(bin_range*i), mn+(bin_range*(i+1))) for i in range(k)]
 
     def _find_bin(row):
         """
@@ -66,6 +69,8 @@ def x_bins(data_set, k, *args, **kwargs):
         for i, bin in enumerate(bins):
             if bin[0] <= row[0] < bin[1]:
                 return i + 1 
+            elif i == len(bins) - 1:
+                return i + 1
     
     clusters = apply_along_axis(_find_bin, 1, data_set)
     clusters = clusters.tolist()

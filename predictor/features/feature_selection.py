@@ -45,6 +45,7 @@ class FeatureSelectionType(Enum):
     MIM = 13
     discMIM = 14
     mRMR_D = 15
+    disc_mRMR_D = 16
     
     def selection_as_str(selection):
         '''Turn the Selection into a string. The special case is for 
@@ -209,7 +210,8 @@ class FeatureSelector:
                         selected_features, feature_scores = \
                             TypeToFeastFunc[feature](df2np, labels, self.weights[title], self.num_features_to_select)
                 else:
-                    if feature.name.startswith("disc") and discretized:
+                    # Note: CMIM always uses discretized values
+                    if (feature.name.startswith("disc") and discretized) or feature == FeatureSelectionType.CMIM:
                         selected_features, feature_scores = \
                             TypeToFeastFunc[feature](df2np, labels, self.num_features_to_select)
                     elif not feature.name.startswith("disc") and not discretized:

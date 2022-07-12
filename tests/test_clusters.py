@@ -1,3 +1,5 @@
+from tabnanny import check
+from xmlrpc.client import MAXINT, MININT
 from predictor.clusters.cluster_algorithms import (
     k_means_wrapper,
     x_bins,
@@ -18,24 +20,33 @@ from predictor.clusters.r import crit, CritSelection
 from predictor.clusters.artifacts import ClusterArtifact
 import pytest
 import numpy as np
+import pandas as pd
+from random import random, shuffle
+from math import fabs
 
 
-
-def create_1d_dataset():
+def create_1d_dataset(col=12):
     '''Create the 1-Dimensional Dataset for the 
     use of unit tests'''
-    data = [float(x+1) for x in range(12)]
-    return np.array(data)
+    data = [random() for x in range(col)]
+    print(data)
+    return np.array(data).reshape(-1, 1)
 
 
-def create_dataset():
+def create_dataset(row=3, col=12):
     '''Create the n-dimensional dataset for the
     use of unit tests
     '''
-    data = [float(x+1) for x in range(12)]
-    data = [data, data]
-    return np.array(data)
+    dataset = []
+    for xdata in range(row):
+        dataset.append([random() for _ in range(col)])
+    return np.array(dataset)
 
+
+'''Note: Kmeans whether it is a single or multidimensional
+problem is a wrapper arounds the Kmeans algorithm. Thus, the
+Kmeans function will not be tested to verify the results.
+'''
 
 def test_kmeans_normal():
     '''Test a simple/normal k-means execution'''
@@ -47,8 +58,8 @@ def test_kmeans_normal():
 
 def test_kmeanspp():
     '''Test a simple kmeans ++ example'''
-    k = 3
-    dataset = create_dataset()
+    k = 5
+    dataset = create_dataset(row=k, col=14)
     clusters = k_means_wrapper(dataset, k, init='k-means++')
     assert len(set(clusters)) == k
 
@@ -66,9 +77,8 @@ def test_x_bins():
     of even width based on the extent of the dataset
     '''
     k = 3
-    dataset = create_1d_dataset()
+    dataset = create_1d_dataset(30)
     clusters = x_bins(dataset, k)
-    
     assert len(set(clusters)) == k
 
 
@@ -76,19 +86,30 @@ def test_e_bins():
     '''Test an example of splitting the dataset where the
     amount per bin are even (or roughly even).
     '''
-    k = 3
-    dataset = create_1d_dataset()
-    clusters = x_bins(dataset, k)
+    k = 5
+    dataset = create_1d_dataset(30)
+    clusters = e_bins(dataset, k)
     
     assert len(set(clusters)) == k
     
     # find the number of entries per cluster
+    cluster_lens = []    
+    for cluster in set(clusters):
+        cluster_lens.append(clusters.count(cluster))
+
+    diff = max(cluster_lens) - min(cluster_lens) 
+    assert 1.0 >= diff >= -1.0
 
 
 def test_natural_breaks():
     '''Test splitting the data by natural break points in the 
     dataset. This is an extension of the natural breaks of jenkspy
     '''
+    k = 3
+    dataset = create_1d_dataset()
+    clusters = natural_breaks(dataset, k)
+    
+    assert len(set(clusters)) == k
 
     
 def test_kde():
@@ -103,54 +124,122 @@ def test_kde():
 
 def test_check_for_singletons_found():
     '''Test finding singletons'''
-
+    max_k = 20
+    
+    dataset = {}
+    for k in range(2, max_k):
+        dataset[str(k)] = k_means_wrapper(create_1d_dataset(30), k)
+    df = pd.DataFrame.from_dict(dataset, orient='index')
+    df = df.transpose()
+    
+    assert True in list(check_for_singletons(df).values())
+    
 
 def test_check_for_singletons_not_found():
     '''Test finding singletons none fond'''
+    max_k = 4
+    
+    dataset = {}
+    for k in range(2, max_k):
+        dataset[str(k)] = k_means_wrapper(create_1d_dataset(30), k)
+    df = pd.DataFrame.from_dict(dataset, orient='index')
+    df = df.transpose()
+    
+    assert True not in list(check_for_singletons(df).values())
 
 
-def df_min_diff_single():
+def test_df_min_diff():
     '''Find the min diff between values in the Dataframe
-    with only one correct value'''
+    with multiple correct values, but first is selected
+    '''    
+    # start is also the min
+    start = 10
+    data = [x for x in range(start, start+10)]
+    shuffle(data)
+    
+    local_idx = 1
+    local_min = MAXINT
+    for i in range(1, len(data)):
+        if fabs(data[i] - data[i-1]) < local_min:
+            local_min = fabs(data[i] - data[i-1])
+            local_idx = i
+
+    row_data = {"1": data}
+    df = pd.DataFrame.from_dict(row_data, orient='index')
+    
+    output = []
+    for idx, row in df.iterrows():
+        output.append(df_min_diff(row))
+    
+    assert local_idx == output[0]
     
     
-def df_min_diff_multiple():
-    '''Find the min diff between values in the Dataframe
+def test_df_max_diff():
+    '''Find the max diff between values in the Dataframe
     with multiple correct values, but first is selected
     '''
+    # start is also the min
+    start = 10
+    data = [x for x in range(start, start+10)]
+    shuffle(data)
+    
+    local_idx = 1
+    local_max = MININT
+    for i in range(1, len(data)):
+        if fabs(data[i] - data[i-1]) > local_max:
+            local_max = fabs(data[i] - data[i-1])
+            local_idx = i
+
+    row_data = {"1": data}
+    df = pd.DataFrame.from_dict(row_data, orient='index')
+    
+    output = []
+    for idx, row in df.iterrows():
+        output.append(df_max_diff(row))
+    
+    assert local_idx == output[0]
+
+
+def test_df_min():
+    '''Find the min between values in the Dataframe
+    with multiple correct values, but first is selected
+    '''
+    # start is also the min
+    start = 10
+    data = [x for x in range(start, start+10)]
+    shuffle(data)
+    
+    local_idx = data.index(min(data))
+
+    row_data = {"1": data}
+    df = pd.DataFrame.from_dict(row_data, orient='index')
+    
+    output = []
+    for idx, row in df.iterrows():
+        output.append(df_min(row))
+    
+    assert local_idx == output[0]
 
     
-def df_max_diff_single():
-    '''Find the max diff between values in the Dataframe
-    with only one correct value'''
-    
-    
-def df_max_diff_multiple():
-    '''Find the max diff between values in the Dataframe
+def test_df_max():
+    '''Find the max between values in the Dataframe
     with multiple correct values, but first is selected
     '''
+    # start is also the min
+    start = 10
+    data = [x for x in range(start, start+10)]
+    shuffle(data)
     
-    
-def df_min_single():
-    '''Find the min between values in the Dataframe
-    with only one correct value'''
-    
-    
-def df_min_multiple():
-    '''Find the min between values in the Dataframe
-    with multiple correct values, but first is selected
-    '''
+    local_idx = data.index(max(data))
 
+    row_data = {"1": data}
+    df = pd.DataFrame.from_dict(row_data, orient='index')
     
-def df_max_single():
-    '''Find the max between values in the Dataframe
-    with only one correct value'''
-    
-    
-def df_max_multiple():
-    '''Find the max between values in the Dataframe
-    with multiple correct values, but first is selected
-    '''
+    output = []
+    for idx, row in df.iterrows():
+        output.append(df_max(row))
+
+    assert local_idx == output[0]
 
 
 def test_select_valid_rows():
@@ -184,3 +273,10 @@ def test_valid_cluster_artifacts():
 def test_invalid_cluster_artifacts():
     '''Create and read a cluster artifact file that is invalid'''
 
+
+
+def main():
+    test_df_max()
+
+if __name__ == '__main__':
+    main()

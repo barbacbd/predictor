@@ -1,4 +1,4 @@
-from predictor.features.feature_selection import FeatureSelectionType, select_features
+from predictor.features.feature_selection import FeatureSelectionType
 import pytest
 
 
