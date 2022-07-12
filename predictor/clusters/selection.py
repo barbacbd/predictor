@@ -166,7 +166,5 @@ def select(df):
                 ret = ref_cols[ret]
 
             selections[idx] = ret
-        else:
-            selections[idx] = None
     
     return selections

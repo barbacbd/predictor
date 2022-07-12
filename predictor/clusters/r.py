@@ -49,10 +49,19 @@ def crit(data_set, labels, criteria, k):
     :return: Pandas Dataframe where the column is the number k (provided) and the rows
     are the algorithms run within the cluster crit package
     '''
+    _criteria = []
+    for c in criteria:
+        if  isinstance(c, CritSelection):
+            _criteria.append(c)
+    
+    if not _criteria:
+        return None
+
+    indices = [x.name for x in _criteria]    
     numpy2ri.activate()
-    applied_data = robjects.globalenv['crit'](data_set, labels, criteria)
+    applied_data = robjects.globalenv['crit'](data_set, labels, indices)
     numpy2ri.deactivate()
-    return pd.DataFrame(applied_data, index=criteria, columns=[str(k)])
+    return pd.DataFrame(applied_data, index=indices, columns=[str(k)])
 
 
 def cacc(df):

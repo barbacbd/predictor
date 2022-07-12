@@ -16,7 +16,7 @@ from predictor.clusters.selection import (
     df_max,
     select
 )
-from predictor.clusters.r import crit, CritSelection
+from predictor.clusters.r import crit, CritSelection, init
 from predictor.clusters.artifacts import ClusterArtifact
 import pytest
 import numpy as np
@@ -29,7 +29,6 @@ def create_1d_dataset(col=12):
     '''Create the 1-Dimensional Dataset for the 
     use of unit tests'''
     data = [random() for x in range(col)]
-    print(data)
     return np.array(data).reshape(-1, 1)
 
 
@@ -245,38 +244,78 @@ def test_df_max():
 def test_select_valid_rows():
     '''Test selection and ensure that values are correctly
     found/selected from the valid rows'''
+    # start is also the min
+    start = 10
+    data = [x for x in range(start, start+10)]
+    shuffle(data)
     
+    local_idx = 1
+    local_max = MININT
+    for i in range(1, len(data)):
+        if fabs(data[i] - data[i-1]) > local_max:
+            local_max = fabs(data[i] - data[i-1])
+            local_idx = i
+
+    row_data = {"Ball_Hall": data}
+    df = pd.DataFrame.from_dict(row_data, orient='index')
+    selections = select(df)
     
+    assert selections["Ball_Hall"] == local_idx
+    
+
 def test_select_invalid_rows():
     '''Test selection and ensure that no values are selected
     due to invlaid row names
     '''
+    start = 10
+    data = [x for x in range(start, start+10)]
+    shuffle(data)
+    
+    row_data = {"Random": data}
+    df = pd.DataFrame.from_dict(row_data, orient='index')
+    selections = select(df)
+    
+    assert "Random" not in selections
 
 
 def test_crit_invalid_option():
     '''Test the CRIT algorithms from R with an invalid algorithm'''
-    
+    k = 3
+    dataset = create_1d_dataset()
+    clusters = k_means_wrapper(dataset, k)
+    output = crit(dataset, clusters, "bad data", k)
+    assert output is None
+
 
 def test_crit_valid_single_option():
     '''Test the CRIT algorithms from R with a valid single algorithm'''
-    
+    k = 3
+    init()
+    dataset = create_1d_dataset()
+    clusters = k_means_wrapper(dataset, k)
+    output = crit(dataset, clusters, [CritSelection.Ball_Hall], k)
+
+    assert CritSelection.Ball_Hall.name in output.index.values
+        
 
 def test_crit_valid_multiple_options():
     '''Test the CRIT algorithms from R with valid algorithms'''
-    
-    
-def test_valid_cluster_artifacts():
-    '''Create and read a cluster artifact file setting the object
-    and verify that the data was correctly created'''
+    k = 3
+    init()
+    dataset = create_1d_dataset()
+    clusters = k_means_wrapper(dataset, k)
+    output = crit(dataset, clusters, [
+        CritSelection.Ball_Hall,
+        CritSelection.Banfeld_Raftery], 
+        k
+    )
 
-
-def test_invalid_cluster_artifacts():
-    '''Create and read a cluster artifact file that is invalid'''
-
+    assert CritSelection.Ball_Hall.name in output.index.values
+    assert CritSelection.Banfeld_Raftery.name in output.index.values
 
 
 def main():
-    test_df_max()
+    test_crit_valid_single_option()
 
 if __name__ == '__main__':
     main()
