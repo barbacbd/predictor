@@ -70,13 +70,13 @@ def test_logging_creation():
 
 def test_create_output_file():
     '''Create the filename for the output file given the input name'''
-    filename = join(dirname(abspath(__file__)), "test_files/AMO_Index.txt")
-    assert create_output_file(filename) == "AMO_Index_analysis.xlsx"
+    filename = join(dirname(abspath(__file__)), "example.txt")
+    assert create_output_file(filename, "xlsx") == "example.xlsx"
 
 
 def test_create_read_file_success():
     '''Test reading in the text file success'''
-    filename = join(dirname(abspath(__file__)), "test_files/AMO_Index.txt")
+    filename = join(dirname(abspath(__file__)), "example.txt")
     assert read_data(filename) is not None
 
 
@@ -125,10 +125,10 @@ def test_highlighting_selections():
 def test_create_config_from_file_valid():
     '''Create a configuration from a valid file'''
     yaml_data = {}
-    yaml_data["filenames"] = ["example.txt", "example2.txt"]
+    yaml_data["filenames"] = ["example1.txt", "example2.txt"]
     yaml_data["max_number_of_clusters"] = 40
     yaml_data["cluster_algorithms"] = ["K_MEANS"]
-    yaml_data["algorithm_settings"] = "k-means++"
+    yaml_data["extras"] = {"init": "k-means++"}
     yaml_data["crit_algorithms"] = ["Ball_Hall", "Banfeld_Raftery"]
     yaml_data["selected_features"] = ["CMIM", "BetaGamma"]
 
@@ -150,13 +150,13 @@ def test_create_config_from_file_valid():
 
 def test_create_config_from_file_valid_files():
     '''Create a configuration from a valid file'''
-    Path("example.txt").touch()
+    Path("example1.txt").touch()
     Path("example2.txt").touch()
     yaml_data = {}
-    yaml_data["filenames"] = ["example.txt", "example2.txt"]
+    yaml_data["filenames"] = ["example1.txt", "example2.txt"]
     yaml_data["max_number_of_clusters"] = 40
     yaml_data["cluster_algorithms"] = ["K_MEANS"]
-    yaml_data["algorithm_settings"] = "k-means++"
+    yaml_data["extras"] = {"init": "k-means++"}
     yaml_data["crit_algorithms"] = ["Ball_Hall", "Banfeld_Raftery"]
     yaml_data["selected_features"] = ["CMIM", "BetaGamma"]
 
@@ -167,7 +167,7 @@ def test_create_config_from_file_valid_files():
     
     assert c.max_clusters == 40
     # neither file exists, so None were added
-    assert c.filenames == ["example.txt", "example2.txt"]
+    assert c.filenames == ["example1.txt", "example2.txt"]
     assert c.cluster_algorithms == [ClusterAlgorithm.K_MEANS]
     assert c.algorithm_extras["init"] == "k-means++"
     assert c.crit_algorithms == [CritSelection.Ball_Hall, CritSelection.Banfeld_Raftery]
@@ -175,7 +175,7 @@ def test_create_config_from_file_valid_files():
     assert len(c.instances) == 2
 
     remove("test.yaml")
-    remove("example.txt")
+    remove("example1.txt")
     remove("example2.txt")
 
 
