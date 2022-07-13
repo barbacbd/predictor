@@ -197,10 +197,12 @@ class ClusterCreator:
             cloned_df = None
         
             # batch these results
+            log.info(" ---------- %d -----------", self.min_clusters)
+            log.info(" ---------- %d -----------", self.max_clusters)
             for cluster_num in range(self.min_clusters, self.max_clusters+1):
                 log.debug("Creating %d clusters, executing %s for %s", cluster_num, sheet_name, self.filename)
                 matching_clusters = func(data_set, cluster_num, **self.algorithm_extras)
-                crit_output = crit(data_set, matching_clusters, crit_algorithm_names, cluster_num)
+                crit_output = crit(data_set, matching_clusters, self.crit_algorithms, cluster_num)
             
                 if cloned_df is None:
                     cloned_df = crit_output
@@ -214,7 +216,8 @@ class ClusterCreator:
                 cluster_dict[cluster_num] = matching_clusters
     
             # drop the names from the dataframe that we don't want. 
-            for idx in set(cloned_df.index) - set(self.crit_algorithms):
+            log.info(set(self.crit_algorithms))
+            for idx in set(cloned_df.index) - set(crit_algorithm_names):
                 cloned_df.drop(index=idx, inplace=True)
 
             log.debug("Saving selection for %s", sheet_name)
