@@ -10,4 +10,3 @@ inquirer
 xlsxwriter
 xlrd
 openpyxl
-aenum

@@ -1,6 +1,5 @@
 
-from aenum import Enum, extend_enum
-from re import M
+from enum import Enum
 from os.path import exists
 from os import mkdir
 from feast.feast import (
@@ -19,7 +18,17 @@ from feast.feast import (
     MIM,
     discMIM,
     mRMR_D,
-    disc_mRMR_D
+    disc_mRMR_D,
+    weightedCMIM,
+    discWeightedCMIM,
+    weightedCondMI,
+    discWeightedCondMI,
+    weightedDISR,
+    discWeightedDISR,
+    weightedJMI,
+    discWeightedJMI,
+    weightedMIM,
+    discWeightedMIM
 )
 from ..log import get_logger
 
@@ -46,6 +55,16 @@ class FeatureSelectionType(Enum):
     discMIM = 14
     mRMR_D = 15
     disc_mRMR_D = 16
+    weightedCMIM = 17
+    discWeightedCMIM = 18
+    weightedCondMI = 19
+    discWeightedCondMI = 20
+    weightedDISR = 21
+    discWeightedDISR = 22
+    weightedJMI = 23
+    discWeightedJMI = 24
+    weightedMIM = 25
+    discWeightedMIM = 26
     
     def selection_as_str(selection):
         '''Turn the Selection into a string. The special case is for 
@@ -77,52 +96,17 @@ TypeToFeastFunc = {
     FeatureSelectionType.discMIM: discMIM,
     FeatureSelectionType.mRMR_D: mRMR_D,
     FeatureSelectionType.disc_mRMR_D: disc_mRMR_D,
+    FeatureSelectionType.weightedCMIM: weightedCMIM,
+    FeatureSelectionType.discWeightedCMIM: discWeightedCMIM,
+    FeatureSelectionType.weightedCondMI: weightedCondMI,
+    FeatureSelectionType.discWeightedCondMI: discWeightedCondMI,
+    FeatureSelectionType.weightedDISR: weightedDISR,
+    FeatureSelectionType.discWeightedDISR: discWeightedDISR,
+    FeatureSelectionType.weightedJMI: weightedJMI,
+    FeatureSelectionType.discWeightedJMI: discWeightedJMI,
+    FeatureSelectionType.weightedMIM: weightedMIM,
+    FeatureSelectionType.discWeightedMIM: discWeightedMIM
 }
-
-def add_weighted_support():
-    '''Add the weighted options to the enumeration and to the 
-    `TypeToFeastFunc` dictionary. 
-    '''
-    try:
-        from feast.feast import (
-            weightedCMIM,
-            discWeightedCMIM,
-            weightedCondMI,
-            discWeightedCondMI,
-            weightedDISR,
-            discWeightedDISR,
-            weightedJMI,
-            discWeightedJMI,
-            weightedMIM,
-            discWeightedMIM
-        )
-        _ffuncnames = ["weightedCMIM", "discWeightedCMIM", "weightedCondMI", "discWeightedCondMI", 
-                       "weightedDISR", "discWeightedDISR", "weightedJMI", "discWeightedJMI", 
-                       "weightedMIM", "discWeightedMIM"]
-        
-        # extend the enum with the weighted values 
-        enum_max = max([x.value for x in FeatureSelectionType]) + 1
-        for name in _ffuncnames:
-            if name not in FeatureSelectionType:
-                extend_enum(FeatureSelectionType, name, enum_max)
-                enum_max += 1
-        
-        TypeToFeastFunc.update(
-            {
-                FeatureSelectionType.weightedCMIM: weightedCMIM,
-                FeatureSelectionType.discWeightedCMIM: discWeightedCMIM,
-                FeatureSelectionType.weightedCondMI: weightedCondMI,
-                FeatureSelectionType.discWeightedCondMI: discWeightedCondMI,
-                FeatureSelectionType.weightedDISR: weightedDISR,
-                FeatureSelectionType.discWeightedDISR: discWeightedDISR,
-                FeatureSelectionType.weightedJMI: weightedJMI,
-                FeatureSelectionType.discWeightedJMI: discWeightedJMI,
-                FeatureSelectionType.weightedMIM: weightedMIM,
-                FeatureSelectionType.discWeightedMIM: discWeightedMIM
-            }
-        )
-    except ImportError as error:
-        log.error(error)
 
 
 class FeatureSelector:
