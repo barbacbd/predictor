@@ -1,8 +1,8 @@
 <h1 align="center">
   <a href="https://github.com/barbacbd/nautical">
-    <img src=".images/Climate-Change.png" width="250" height="150" border-radius="50%" >
+    <img src=".images/predictor.png" width="250" height="150" border-radius="50%" >
   </a>
-  <br>Predictor</br>
+  <br>Local Water Level Predictor</br>
 </h1>
 
 <h2 align="center">
@@ -12,20 +12,65 @@
 
 ## Description
 
-The project contains a set of tools and an executable that will allow the user(s) to predict necessary measures to couunter the effects of climate change at a local level.
+The project contains a set of tools and an executable that will allow the user(s) to predict necessary measures to counter the effects of climate change at a local level. 
 
 **Note**: _Currently, the project is only tested on specific versions of `linux`_.
 
-## Contributing
+## Example Usage
 
-View the [contirbuting guidelines](user/docs/Contributing.md) for more information.
+The following is a simple (non-exhaustive) list of possible uses for this project.
 
-## Execution with the script
+- Estimation of required water storage for crops
+- Estimation of required water for survival
+- Water shed levels 
 
-... Under construction ...
+## Contributing Guidelines
 
+### Getting started 
+
+If you are interested in contributing, please look through the following steps to get started.
+
+- Fork the repository.
+- Create a virtual environment [Optional].
+- Install the dependencies.
+  - Install R prior to the python dependencies, so the R-python bindings are accepted.
+- Play with the project, submit bugs, submit patches!
+
+**Note**: _See the [dev image project](https://github.com/barbacbd/predictor-dev-image) for more information_. 
+
+### Work Flow
+
+Anyone may submit issues to the [predictor issues](https://github.com/barbacbd/predictor/issues) page. The issues will be reviewed, and those that are deemed _valuable changes_ to the project will be accepted. 
+
+1. Create a topic branch from where you want to base your work (usually master).
+2. Make commits of logical units.
+3. Make commit messages that clearly document the changes.
+4. Push your changes to a topic branch in your fork of the repository.
+5. Make sure the tests pass, and add any new tests as appropriate.
+6. Submit a pull request to the original repository.
+
+
+### Commit Message Format
+
+A rough convention for commit messages that is designed to answer two
+questions: what changed and why. The subject line should feature the what and
+the body of the commit should describe the why.
+
+
+## Data Format
+
+The original data sets for this project can be found [here](https://github.com/barbacbd/predictor-datasets).
+
+Data _should_ be provided as a single line of data consisting of floating point numbers. 
+
+
+## Related Projects
+
+- [Development Image](https://github.com/barbacbd/predictor-dev-image)
+- [Pods](https://github.com/barbacbd/predictor-pods)
+- [Data sets](https://github.com/barbacbd/predictor-datasets)
 
 ## Extra Documentation
 
-* [Clusters](user/docs/Cluster.md)
-* [Crit](user/docs/Crit.md)
+- [Clusters](user/docs/Cluster.md)
+- [Crit](user/docs/Crit.md)
