@@ -37,7 +37,7 @@ log = get_logger()
 
 
 class FeatureSelectionType(Enum):
-    
+
     ALL = 0
     CMIM = 1
     discCMIM = 2
@@ -65,7 +65,7 @@ class FeatureSelectionType(Enum):
     discWeightedJMI = 24
     weightedMIM = 25
     discWeightedMIM = 26
-    
+
     def selection_as_str(selection):
         '''Turn the Selection into a string. The special case is for 
         `ALL` as it returns the combined string for all other values.
@@ -110,15 +110,15 @@ TypeToFeastFunc = {
 
 
 class FeatureSelector:
-    
+
     ArtifactsDirectory = "feature_results"
-    
+
     def __init__(
-        self, 
-        feature_algorithms, 
-        num_features_to_select, 
-        dataframes={}, 
-        selections={}, 
+        self,
+        feature_algorithms,
+        num_features_to_select,
+        dataframes={},
+        selections={},
         weights={},
         algorithm_extras={}
     ):
@@ -137,7 +137,7 @@ class FeatureSelector:
         self.weights = weights
         self.algorithm_extras = algorithm_extras
         self.labels = self._create_labels()
-    
+
         self.selected_features = {}
 
         if "beta" not in self.algorithm_extras:
@@ -158,32 +158,30 @@ class FeatureSelector:
         extra parameters.
         '''
         for title, df in self.dataframes.items():
-            
-            # TODO: may need to transpose the dataframe 
-            
+            # TODO: may need to transpose the dataframe
             df2np = df.to_numpy()
             labels = self.labels[title]
             discretized = "_clusters" in title
-            
+
             for feature in self.feature_algorithms:
-                
+
                 if feature not in TypeToFeastFunc:
                     log.warning("Dataframe %s skipping feature algorithm %s", title, feature.name)
                     continue
-                
+
                 selected_features = None
                 feature_scores = None
-                
+
                 if feature == FeatureSelectionType.BetaGamma and not discretized:
                     selected_features, feature_scores = \
                         TypeToFeastFunc[feature](
-                            df2np, labels, self.num_features_to_select, 
+                            df2np, labels, self.num_features_to_select,
                             self.algorithm_extras["beta"], self.algorithm_extras["gamma"]
                         )
                 elif feature == FeatureSelectionType.discBetaGamma and discretized:
                     selected_features, feature_scores = \
                         TypeToFeastFunc[feature](
-                            df2np, labels, self.num_features_to_select, 
+                            df2np, labels, self.num_features_to_select,
                             self.algorithm_extras["beta"], self.algorithm_extras["gamma"]
                         )
                 elif "weight" in feature.name.lower():
@@ -201,17 +199,14 @@ class FeatureSelector:
                     elif not feature.name.startswith("disc") and not discretized:
                         selected_features, feature_scores = \
                             TypeToFeastFunc[feature](df2np, labels, self.num_features_to_select)
-        
-        
+
                 if selected_features is not None and feature_scores is not None:
                     if title not in self.selected_features:
                         self.selected_features[title] = {}
-                    
-                    # TODO: convert the selected features to the names of the features 
+
+                    # TODO: convert the selected features to the names of the features
                     # TODO: Add in the scores too
-                    
                     self.selected_features[title][feature.name] = selected_features
-                    
                 else:
                     log.error("Failed to retrieve data for %s with %s algorithm", title, feature.name)
 
@@ -222,5 +217,5 @@ class FeatureSelector:
         if not exists(FeatureSelector.ArtifactsDirectory):
             log.info("Creating feature directory: %s", FeatureSelector.ArtifactsDirectory)
             mkdir(FeatureSelector.ArtifactsDirectory)
-        
-        
+
+
