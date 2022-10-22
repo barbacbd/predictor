@@ -39,11 +39,13 @@ function HELP() {
     '
     echo "Predictor.sh {-d}"
     echo ""
-    echo "TODO: Predicot description here"
+    echo "TODO: Predictor description here"
     echo ""
     echo " Options   Description"
+    echo "   -b      Build Type {devel, release}."
     echo "   -d      Directory where the initial data (txt) files are located. "
     echo "   -h      Help"
+    echo "   -x      Debug Mode."
 }
 
 function CreateImages() {
@@ -76,7 +78,7 @@ function CreateImages() {
 	else
 	    # let the dockerfile in the directory create the image
 	    LOG "Building the image: $dirname"
-	    podman build . -t ${dirname}:latest
+	    podman build . -t ${dirname}:latest --build-arg build="$1"
 	fi
 
 	# remove the data from the stack
@@ -112,10 +114,13 @@ SourceDir="."
 # SourceFiles will hold the artifacts for all data files input to the program
 SourceFiles=()
 PODSModule="predictor-pods"
+# Default Build Type
+BuildType="devel"
 
-while getopts d:hx flag
+while getopts b:d:hx flag
 do
     case "${flag}" in
+	b) BuildType=${OPTARG};;
         d) SourceDir=${OPTARG};;
 	h) HELP; exit 1;;
 	x) set -eux;;
@@ -141,7 +146,7 @@ for file in "${SourceFiles[@]}"; do
 done
 
 PullSubmodule
-CreateImages
+CreateImages "$BuildType"
 
 # Execute the Cluster and Criteria on all of the directories that were created above
 for dirname in "${SourceFiles[@]}"; do
