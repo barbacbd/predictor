@@ -46,6 +46,7 @@ function HELP() {
     echo "   update   Pull/Update the Dockerfiles for the pods."
     echo "   files    Collect and Artifact all files for runtime."
     echo "   run      Main execution."
+    echo "   clean    Cleanup all artifacts."
     echo ""
     echo " Options   Description"
     echo "   -b      Build Type {devel, release}."
@@ -63,7 +64,7 @@ function CreateImages() {
     LOG "Pushing submodule to stack"
     pushd "${PODSModule}"
 
-    # Create the podman images from the pods project that was pulled above.
+    # Create the images from the pods project that was pulled above.
     # If the images do NOT exist, then the images are made here otherwise their
     # creation is skipped, and they images are assumed correct.
     for dir in `ls -d */`; do
@@ -76,7 +77,7 @@ function CreateImages() {
 	pushd $dirname
 
 	LOG "Searching for an image named $dirname"
-	FoundImages=$(podman image ls | grep "${dirname}" | wc -l)
+	FoundImages=$(docker image ls | grep "${dirname}" | wc -l)
 	LOG "${FoundImages}"
 
 	if [ $FoundImages -gt 0 ]; then
@@ -84,7 +85,7 @@ function CreateImages() {
 	else
 	    # let the dockerfile in the directory create the image
 	    LOG "Building the image: $dirname"
-	    podman build . -t ${dirname}:latest --build-arg build="$1"
+	    docker build . -t ${dirname}:latest --build-arg build="$1"
 	fi
 
 	# remove the data from the stack
@@ -126,6 +127,10 @@ function CreateFileDirs() {
     done
     popd
 
+    for file in "${SourceFiles[@]}"; do
+        AddArtifact "$file"
+    done
+
     # The new directories will be named the filenames
     for file in "${SourceFiles[@]}"; do
         if [ ! -d "$file" ]; then
@@ -140,8 +145,8 @@ function RunPods() {
     # Execute the Cluster and Criteria on all of the directories that were created above
     for dirname in "${SourceFiles[@]}"; do
         if [ -d "$dirname" ]; then
-           podman run --privileged -v ${PWD}/${dirname}:/output clusters:latest /Clusters /output/${dirname} -a E_BINS --min_k 2 --max_k 50
-           podman run --privileged -v ${PWD}/${dirname}:/output criteria:latest /IntCriteriaExec /output -c ALL --skip_gdi
+           docker run --privileged -v ${PWD}/${dirname}:/output clusters:latest /Clusters /output/${dirname} -a E_BINS --min_k 2 --max_k 50
+           docker run --privileged -v ${PWD}/${dirname}:/output criteria:latest /IntCriteriaExec /output -c ALL --skip_gdi
         else
             LOG "Failed to execute Clusters and Criteria on ${dirname}"
         fi
@@ -157,6 +162,7 @@ function Feast() {
     if [ ! -d "feast" ]; then
         LOG "Creating feast directory"
         mkdir feast
+        AddArtifact "feast"
     fi
 
     # Read in all of the output files from the previous step and combine them into a single file
@@ -179,12 +185,41 @@ with open("feast/FeastInput.json", "w+") as feastInputFile:
 ' "${OutputFiles[@]}"
 }
 
+function RemoveArtifacts() {
+    # Attempt to remove the artifacts that may have been created during the execution
+
+    if [ -f "$SourceFileArtifact" ]; then
+        mapfile -t LocalSourceFiles < $SourceFileArtifact
+        for artifact in "${LocalSourceFiles[@]}"
+        do
+            LOG "removing artifact: ${artifact}"
+            rm -rf $artifact
+        done
+
+        RemoveArtifactFile
+    fi
+}
+
+function RemoveArtifactFile() {
+    if [ -f "$SourceFileArtifact" ]; then
+        LOG "removing ${SourceFileArtifact}"
+        rm -rf $SourceFileArtifact
+    fi
+}
+
+function AddArtifact() {
+    if [ ! -f "$SourceFileArtifact" ]; then
+        touch "$SourceFileArtifact"
+    fi
+
+    printf "%s\n" "$@" >> "$SourceFileArtifact"
+}
 
 # Default values
 SourceDir="."
 # SourceFiles will hold the artifacts for all data files input to the program
 SourceFiles=()
-SourceFileArtifact="SourceFiles.txt"
+SourceFileArtifact=".PredictorLog.txt"
 PODSModule="predictor-pods"
 # Default Build Type
 BuildType="devel"
@@ -204,8 +239,8 @@ do
     esac
 done
 
-# Provide multiple execution paths 
-case "${1:-}" in 
+# Provide multiple execution paths
+case "${1:-}" in
     'images')
         CreateImages
         ;;
@@ -216,6 +251,7 @@ case "${1:-}" in
         CreateFileDirs
         ;;
     'run')
+        RemoveArtifactFile
         CreateFileDirs
 
         # If the user wishes to pull/update the submodule they can use
@@ -229,10 +265,11 @@ case "${1:-}" in
         RunPods
 
         Feast
-	;;
+	   ;;
+    'clean')
+        RemoveArtifacts
+        ;;
     *)
         HELP
         ;;
 esac
-
-
