@@ -43,7 +43,6 @@ function HELP() {
     echo ""
     echo " Execution  Description"
     echo "   images   Create the podman/docker images."
-    echo "   update   Pull/Update the Dockerfiles for the pods."
     echo "   files    Collect and Artifact all files for runtime."
     echo "   run      Main execution."
     echo "   clean    Cleanup all artifacts."
@@ -56,12 +55,7 @@ function HELP() {
 }
 
 function CreateImages() {
-    : '
-    Create the podman/docker images from the Dockerfiles contained in
-    all of the submodule directories. See predictor-pods for more information.
-    '
-
-    LOG "Pushing submodule to stack"
+    LOG "Pushing pods to stack"
     pushd "${PODSModule}"
 
     # Create the images from the pods project that was pulled above.
@@ -94,25 +88,8 @@ function CreateImages() {
     done
 
 
-    LOG "popping submodule from stack"
+    LOG "popping pods from stack"
     popd
-}
-
-function PullSubmodule() {
-    : '
-    pull the latest set of pods. the pods are contained in the github project
-    https://github.com/barbacbd/predictor-pods. This will pull the latest source
-    so that the user does not need to.
-    '
-    git submodule update --remote
-
-    # fail if something else failed with the above command
-    # Note: this means that the program must be executed from the home directory
-    # of the github project for now.
-    if [ ! -d "${PODSModule}" ]; then
-	LOG "Failed to find submodule: predictor-pods"
-	exit 1
-    fi
 }
 
 function CreateFileDirs() {
@@ -220,7 +197,8 @@ SourceDir="."
 # SourceFiles will hold the artifacts for all data files input to the program
 SourceFiles=()
 SourceFileArtifact=".PredictorLog.txt"
-PODSModule="predictor-pods"
+# TODO: see if we can create a global lookup for this using a makefile
+PODSModule="pods"
 # Default Build Type
 BuildType="devel"
 
@@ -244,19 +222,12 @@ case "${1:-}" in
     'images')
         CreateImages
         ;;
-    'update')
-        PullSubmodule
-        ;;
     'files')
         CreateFileDirs
         ;;
     'run')
         RemoveArtifactFile
         CreateFileDirs
-
-        # If the user wishes to pull/update the submodule they can use
-        # the update functionality
-        LOG "not pulling submodule: use command 'update'"
 
         # this will also check that the images exist. But remember that 
         # no updates may have been pulled, so this may not be using the latest

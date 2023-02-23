@@ -1,0 +1,278 @@
+#!/bin/python3
+
+"""
+MIT License
+
+Copyright (c) 2022 Brent Barbachem
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+import argparse
+from codecs import open as copen
+from copy import copy
+from enum import Enum
+import jenkspy
+from json import dumps
+from kmeans1d import cluster as kmeans1dc
+from numpy import asarray, apply_along_axis, std, linspace, less, greater, loadtxt
+from os.path import exists, join
+import pandas as pd
+from scipy.signal import argrelextrema
+from sklearn.cluster import k_means
+from sklearn.neighbors import KernelDensity
+
+
+def create_output_file(filename, extension):
+    '''Provide the original filename and convert the name to
+    use the extension provided. The filename will be local (no
+    longer include the full path).
+
+    :param filename: input file name
+    :param extension: new extension for the filename
+    :return: output filename
+    '''
+    if not filename:
+        return None
+
+    if not extension:
+        return None
+
+    sp = filename.split("/")
+    fname = sp.pop()
+    file_path = "/".join(sp)
+    split_fname = fname.split(".")
+    
+    split_fname = filename.split("/")[-1].split(".")
+    new_ext_name = ".".join(split_fname[:len(split_fname)-1] + [extension])
+    return join(file_path, new_ext_name)
+
+
+def read_data(filename):
+    '''Attempt to read the data file into a pandas Dataframe. The
+    following encodings are considered valid: UTF-8, UTF-16,
+    ascii
+
+    :param filename: name (including path) to the file
+    :return: pandas DataFrame on success, None otherwise
+    '''
+
+    data = None
+    encodings = ('UTF-8', 'UTF-16', 'ascii')
+
+    for enc in encodings:
+        with copen(filename, encoding=enc) as f:
+            try:
+                data = loadtxt(f)
+                break
+            except UnicodeDecodeError:
+                continue
+
+    if data is not None:
+        try:
+            num_rows, num_cols = data.shape
+        except ValueError as e:
+            data = data.reshape(-1, 1)
+
+    return data
+
+
+def k_means_wrapper(data_set, k, *args, **kwargs):
+    '''The function will call the kmeans algorithm for data where the
+    dimensions are greater than 1, while the kmeans1d algorithm will be
+    used for 1-dimensional data. While kmeans can be applied to data of
+    any number of dimensions, 1-D data is a special case and should be handled
+    appropriately.
+
+    :param data_set: numpy array
+    :param k: number of clusters
+
+    Keyword Arguments:
+
+    :param init: Applies ONLY to data that has more than one dimension. The
+    `init` should be used to pass the data kmeans.
+    '''
+
+    shape = data_set.shape
+    if len(shape) == 2:
+        rows, cols = shape
+    else:
+        cols = shape
+
+    if cols == 1:
+        matching_clusters, centroids = kmeans1dc(data_set, k)
+    else:
+        centroids, matching_clusters, weighted_sum_to_centroids = k_means(
+            data_set, k, init=kwargs.get('init', 'k-means++')
+        )
+
+    # update the array values, in R the indicies started with 1 not 0
+    matching_clusters = asarray(matching_clusters) + 1
+
+    # format the data as a list, this is expected by R
+    matching_clusters = matching_clusters.tolist()
+    return matching_clusters
+
+
+def x_bins(data_set, k, *args, **kwargs):
+    '''Create K number of even width'd bins. Find the max
+    and min values in the dataset. Divide the space between
+    max and min into k bins.
+
+    :param data_set: numpy array
+    :param k: Number of bins or clusters
+
+    :return: cluster numbers in order for the original dataset
+    '''
+    mn = data_set.min()
+    diff = data_set.max() - mn
+    bin_range = diff / k
+
+    bins = [(mn+(bin_range*i), mn+(bin_range*(i+1))) for i in range(k)]
+
+    def _find_bin(row):
+        """
+        :param row: Dataframe row
+        """
+        for i, bin in enumerate(bins):
+            if bin[0] <= row[0] < bin[1]:
+                return i + 1
+            elif i == len(bins) - 1:
+                return i + 1
+
+    clusters = apply_along_axis(_find_bin, 1, data_set)
+    clusters = clusters.tolist()
+    return clusters
+
+
+def e_bins(data_set, k, *args, **kwargs):
+    '''Even numbers per k bins. This is more of a grouping than anything. Separate the
+    data into k number of bins where each bin has the same or close to the same number
+    of entries.
+
+    :param data_set: numpy array
+    :param k: number of clusters
+    '''
+    data_set_copy = copy(data_set)
+
+    rows, cols = data_set.shape
+
+    # this may not be the EXACT number per bin as duplicates must be
+    # moved to the same bin to avoid an error where the bin limits
+    # are the same value
+    out = pd.qcut(data_set[:,0], q=k, labels=False)
+    out += 1  # expects 1 - k, not 0 - k-1
+    return out.tolist()
+
+
+def natural_breaks(data_set, k, *args, **kwargs):
+    '''Implementation of the natural breaks or jenks_breaks algorithm
+    on the 1-Dimensional dataset. The algorithm will attempt to
+    find the natural break points in the dataset.
+
+    Sort the dataset (which keeps the original index values) and apply
+    the function to the sorted data.
+
+    :param data_set: Numpy array
+    :param k: number of clusters
+
+    :return: `clusters` or groups of data
+    '''
+    df = pd.DataFrame(data_set, columns=["Data Points"])
+    df.sort_values(by='Data Points')
+    df['bin'] = pd.cut(
+        df['Data Points'],
+        bins=jenkspy.jenks_breaks(df['Data Points'], nb_class=k),
+        labels=[x for x in range(1, k+1)],
+        include_lowest=True
+        )
+    return df['bin'].to_list()
+
+
+class ClusterAlgorithm(Enum):
+    ALL = 0
+    K_MEANS = 1
+    X_BINS = 2
+    E_BINS = 3
+    NATURAL_BREAKS = 4
+
+    @classmethod
+    def list_functions(cls, algorithm):
+        '''Get the function that implements the algorithm associated with
+        the enumeration type.
+
+        :return: list of functions
+        '''
+        funcs = []
+
+        func_dict = {
+            cls.K_MEANS: k_means_wrapper,
+            cls.X_BINS: x_bins,
+            cls.E_BINS: e_bins,
+            cls.NATURAL_BREAKS: natural_breaks,
+        }
+
+        if algorithm in cls:
+            if algorithm == cls.ALL:
+                return list(func_dict.values())
+            else:
+                funcs.append(func_dict.get(algorithm))
+        return funcs
+
+
+def main():
+    '''The purpose of this file is provide an executable that will read in the
+    original data, create the clusters, and output the data to a file
+    '''
+    parser = argparse.ArgumentParser(prog='ClusterCreator')
+    parser.add_argument('file', help='Input file of data points')
+    parser.add_argument('--min_k', type=int, default=2, help='minimum number of clusters')
+    parser.add_argument('--max_k', type=int, default=2, help='maximum number of clusters')
+    algorithms = [x.name for x in ClusterAlgorithm if x != ClusterAlgorithm.ALL]
+    parser.add_argument('-a', '--algorithm', choices=algorithms, default=ClusterAlgorithm.K_MEANS.name)
+    args = parser.parse_args()
+
+    if not exists(args.file):
+        print("{} does not exist".format(args.file))
+        exit(1)
+
+    data_set = read_data(args.file)
+    min_k = max(min(args.min_k, args.max_k), 2)
+    max_k = max(max(args.min_k, args.max_k), 2)
+    # only one available
+    algorithm = [x for x in ClusterAlgorithm if x.name == args.algorithm][0]
+    # technically there can only be 1
+    func = ClusterAlgorithm.list_functions(algorithm)[0]
+
+    print("Executing {} algorithm on clusters {} - {}".format(algorithm.name, min_k, max_k))
+
+    cluster_data = []
+    for k in list(range(min_k, max_k+1)):
+        cluster_data.append(func(data_set, k))
+
+    json_data = {}
+    # ndarray not dataframe so tolist not to_list
+    json_data["data"] = data_set.flatten().tolist()
+    json_data["clusters"] = cluster_data
+
+    with open(create_output_file(args.file, "json"), "w+") as jsonFile:
+        jsonFile.write(dumps(json_data, indent=4))
+
+
+if __name__ == '__main__':
+    main()

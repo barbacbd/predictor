@@ -1,5 +1,5 @@
 <h1 align="center">
-  <a href="https://github.com/barbacbd/nautical">
+  <a href="https://github.com/barbacbd/predictor">
     <img src=".images/predictor.png" width="250" height="150" border-radius="50%" >
   </a>
   <br>Local Water Level Predictor</br>
@@ -56,15 +56,24 @@ A rough convention for commit messages that is designed to answer two
 questions: what changed and why. The subject line should feature the what and
 the body of the commit should describe the why.
 
+<br>
+<br>
 
-## Data Format
+<br>Containerization</br>
+  <a href="https://www.docker.com/">
+    <img src=".images/docker.png" width="100" border-radius="50%"/>
+  </a>
+  <a href="https://podman.io/">
+    <img src=".images/podman.png" width="100" border-radius="50%"/> 
+  </a>
 
-The original data sets for this project can be found [here](https://github.com/barbacbd/predictor-datasets).
+[![Clusters Docker](https://github.com/barbacbd/predictor/actions/workflows/clusters-image.yml/badge.svg)](https://github.com/barbacbd/predictor/actions/workflows/clusters-image.yml)
+[![Criteria Docker](https://github.com/barbacbd/predictor/actions/workflows/criteria-image.yml/badge.svg)](https://github.com/barbacbd/predictor/actions/workflows/criteria-image.yml)
+[![Features Docker](https://github.com/barbacbd/predictor/actions/workflows/features-image.yml/badge.svg)](https://github.com/barbacbd/predictor/actions/workflows/features-image.yml)
+</h1>
 
-Data _should_ be provided as a single line of data consisting of floating point numbers. 
+# Images
 
-
-## Extra Documentation
-
-- [Clusters](user/docs/Cluster.md)
-- [Crit](user/docs/Crit.md)
+- [Clusters](https://github.com/barbacbd/predictor/blob/main/pods/clusters/README.md)
+- [Criteria](https://github.com/barbacbd/predictor/blob/main/pods/criteria/README.md)
+- [Features](https://github.com/barbacbd/predictor/blob/main/pods/features/README.md)

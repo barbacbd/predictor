@@ -1,0 +1,77 @@
+#!/bin/python3
+
+"""
+MIT License
+
+Copyright (c) 2022 Brent Barbachem
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
+import argparse
+#from fstoolbox import CMIM
+import pandas as pd
+import numpy as np
+import from json import load
+from os.path import exists, join
+
+def main():
+    """
+
+    """
+    #parser = argparse.ArgumentParser(prog='FeatureSelection')
+    #parser.add_argument('filename', help='json file containing the feature scores.')
+
+    # TODO: select the features here
+    featureSelectionFuncNames = {}
+    #parser.add_argument('-f', '--feature_func', nargs='+', choices=list(featureSelectionFuncNames.keys()), default='ALL')
+
+    #args = parser.parse_args()
+
+    #if not exists(args.filename):
+    # file must exist or there is nothing to do
+    #exit(1)
+
+    filename = "FeastInput.json"
+    
+    with open(filename, "rb") as jsonFile:
+        jsonData = load(jsonFile)
+
+    # validate that all of the criteria are the same for each
+    _criteriaSet = None
+    for originalDataSetName, criteriaValues in jsonData.items():
+        if not _criteriaSet:
+            _criteriaSet = set(criteriaValues.keys())
+        else:
+            if _criteriaSet.symmetric_difference(set(criteriaValues.keys())) != set():
+                # All of the criteria must be the exact same
+                exit(2)
+
+
+    # create the dataframe that will hold all of the criteria.
+    # Preset the columns and rows
+    feastDF = pd.Dataframe(columns=list(_criteriaSet), index=list(jsonData.keys()))
+    for originalDataSetName, criteriaValues in jsonData.items():
+        feastDF.append(pd.Series(list(criteriaValues.values()), index=list(criteriaValues.keys()), name=originalDataSetName))
+
+    print(feastDF)
+        
+
+if __name__ == '__main__':
+    main()

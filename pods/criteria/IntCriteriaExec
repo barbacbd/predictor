@@ -1,0 +1,138 @@
+#!/bin/python3
+
+"""
+MIT License
+
+Copyright (c) 2022 Brent Barbachem
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+from cluster_crit import intCriteria, CriteriaInternal, getCriteriaNames, bestCriterion
+import argparse
+from collections import defaultdict
+from json import load, dumps
+import numpy as np
+from os.path import exists, join
+from os import listdir
+
+
+def main():
+    '''Main entry point for the ClusterCrit software bridge between
+    python and R.
+
+    Inputs:
+      data set: the original data set. For the use of this program it is a 1-Dimensional
+                data set of floating point numbers.
+      clustered data: The numerical cluster from 1 to N where the corresponding data point
+                      belongs.
+      criteria: List of the criteria to be used as indicies for selection.
+
+    GOAL: Given the inputs, provide the cluster criteria values.
+
+    '''
+    parser = argparse.ArgumentParser(prog='IntCriteria')
+    parser.add_argument('dir',
+                        help='Directory where the executable will run. '
+                        'This directory will contain any input files as well as '
+                        'the artifact files output by this executable.'
+    )
+
+    criteriaOptions = {x.name: x for x in CriteriaInternal}
+    parser.add_argument('-c', '--criteria', nargs='+', choices=list(criteriaOptions.keys()), default=CriteriaInternal.ALL.name)
+    parser.add_argument('--skip_gdi', action='store_true')
+    parser.set_defaults(skip_gdi=True)
+
+    args = parser.parse_args()
+
+    # Failing instead of creating the directory, because this is intended to be
+    # executed in a container. If that directory does not exist then it cannot
+    # be exposed to the user.
+    if not exists(args.dir):
+        # Error out when the directory does not exist
+        exit(1)
+
+    # Find the first json file (should only be one) in the supplied directory
+    filename = ""
+    for fname in listdir(args.dir):
+        if fname.endswith(".json"):
+            filename = join(args.dir, fname)
+            break
+
+    with open(filename, "rb") as jsonFile:
+        json_data = load(jsonFile)
+
+    if "data" not in json_data:
+        # Error out when data was not present
+        exit(2)
+    dataset = json_data["data"]
+
+    # reshape the data like it is expected for the library
+    dataset = np.asarray(dataset)
+    dataset = dataset.reshape(-1, 1)
+
+    if "clusters" not in json_data:
+        # Error out when cluster information not present
+        exit(3)
+
+    # should be a dictionary of clusters in the form:
+    # "clusters": [
+    #   [],
+    #   ...
+    #   []
+    # ]
+    # Where the clusters are ordered lowest to largest (k)
+    clusters = json_data["clusters"]
+
+    # Handle/Convert the criteria information
+    criteria = args.criteria
+    if CriteriaInternal.ALL.name in criteria:
+        criteria = list(criteriaOptions.keys())
+        criteria.remove(CriteriaInternal.ALL.name)
+
+    if args.skip_gdi:
+        criteria = [c for c in criteria if "GDI" not in c]
+
+    # convert back to the enumerations
+    criteria = [criteriaOptions[x] for x in criteria]
+
+    crit_output = defaultdict(list)
+    for cluster_data in clusters:
+        # Execute the cluster criteria using internal indicies
+        output = intCriteria(dataset, cluster_data, criteria)
+
+        for k, v in output.items():
+            crit_output[k].append(v)
+
+    json_output = {}
+    json_output["criteria"] = crit_output
+
+    # execute best criteria
+    best_criteria = {}
+    for k, v in crit_output.items():
+        best_criteria[k] = bestCriterion(np.asarray(v), k)
+
+    json_output["best"] = best_criteria
+
+    # write the output to the datafile
+    with open(join(args.dir, "output.json"), "w+") as jsonFile:
+        jsonFile.write(dumps(json_output, indent=4))
+
+
+if __name__ == '__main__':
+    main()
