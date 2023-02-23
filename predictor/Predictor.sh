@@ -42,7 +42,6 @@ function HELP() {
     echo "TODO: Predictor description here"
     echo ""
     echo " Execution  Description"
-    echo "   images   Create the podman/docker images."
     echo "   files    Collect and Artifact all files for runtime."
     echo "   run      Main execution."
     echo "   clean    Cleanup all artifacts."
@@ -52,44 +51,6 @@ function HELP() {
     echo "   -d      Directory where the initial data (txt) files are located. "
     echo "   -h      Help"
     echo "   -x      Debug Mode."
-}
-
-function CreateImages() {
-    LOG "Pushing pods to stack"
-    pushd "${PODSModule}"
-
-    # Create the images from the pods project that was pulled above.
-    # If the images do NOT exist, then the images are made here otherwise their
-    # creation is skipped, and they images are assumed correct.
-    for dir in `ls -d */`; do
-	dirname=${dir%"/"}
-	LOG "$dirname"
-	LOG "Creating the image from information contained in $dirname"
-
-	# push this directory on to the stack
-	LOG "Pushing $dirname on to the stack"
-	pushd $dirname
-
-	LOG "Searching for an image named $dirname"
-	FoundImages=$(docker image ls | grep "${dirname}" | wc -l)
-	LOG "${FoundImages}"
-
-	if [ $FoundImages -gt 0 ]; then
-	    LOG "delete or update image before proceeding: ${dirname}"
-	else
-	    # let the dockerfile in the directory create the image
-	    LOG "Building the image: $dirname"
-	    docker build . -t ${dirname}:latest --build-arg build="$1"
-	fi
-
-	# remove the data from the stack
-	LOG "Popping $dirname from the stack"
-	popd
-    done
-
-
-    LOG "popping pods from stack"
-    popd
 }
 
 function CreateFileDirs() {
@@ -219,19 +180,12 @@ done
 
 # Provide multiple execution paths
 case "${1:-}" in
-    'images')
-        CreateImages
-        ;;
     'files')
         CreateFileDirs
         ;;
     'run')
         RemoveArtifactFile
         CreateFileDirs
-
-        # this will also check that the images exist. But remember that 
-        # no updates may have been pulled, so this may not be using the latest
-        CreateImages "$BuildType"
 
         RunPods
 
