@@ -23,7 +23,13 @@
 
 The project contains a set of tools and an executable that will allow the user(s) to predict necessary measures to counter the effects of climate change at a local level. 
 
-**Note**: _Currently, the project is only tested on specific versions of `linux`_.
+**Note**: _Currently, the project is only tested on `linux`_.
+
+## Images
+
+- [Clusters](https://github.com/barbacbd/predictor/blob/master/pods/clusters/README.md)
+- [Criteria](https://github.com/barbacbd/predictor/blob/master/pods/criteria/README.md)
+- [Features](https://github.com/barbacbd/predictor/blob/master/pods/features/README.md)
 
 ## Example Usage
 
@@ -45,8 +51,6 @@ If you are interested in contributing, please look through the following steps t
   - Install R prior to the python dependencies, so the R-python bindings are accepted.
 - Play with the project, submit bugs, submit patches!
 
-**Note**: _See the [dev image project](https://github.com/barbacbd/predictor-dev-image) for more information_. 
-
 ### Work Flow
 
 Anyone may submit issues to the [predictor issues](https://github.com/barbacbd/predictor/issues) page. The issues will be reviewed, and those that are deemed _valuable changes_ to the project will be accepted. 
@@ -64,9 +68,3 @@ Anyone may submit issues to the [predictor issues](https://github.com/barbacbd/p
 A rough convention for commit messages that is designed to answer two
 questions: what changed and why. The subject line should feature the what and
 the body of the commit should describe the why.
-
-## Images
-
-- [Clusters](https://github.com/barbacbd/predictor/blob/master/pods/clusters/README.md)
-- [Criteria](https://github.com/barbacbd/predictor/blob/master/pods/criteria/README.md)
-- [Features](https://github.com/barbacbd/predictor/blob/master/pods/features/README.md)
