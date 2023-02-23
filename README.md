@@ -74,6 +74,6 @@ the body of the commit should describe the why.
 
 # Images
 
-- [Clusters](https://github.com/barbacbd/predictor/blob/main/pods/clusters/README.md)
-- [Criteria](https://github.com/barbacbd/predictor/blob/main/pods/criteria/README.md)
-- [Features](https://github.com/barbacbd/predictor/blob/main/pods/features/README.md)
+- [Clusters](https://github.com/barbacbd/predictor/blob/master/pods/clusters/README.md)
+- [Criteria](https://github.com/barbacbd/predictor/blob/master/pods/criteria/README.md)
+- [Features](https://github.com/barbacbd/predictor/blob/master/pods/features/README.md)
