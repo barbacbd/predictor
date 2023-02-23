@@ -3,11 +3,20 @@
     <img src=".images/predictor.png" width="250" height="150" border-radius="50%" >
   </a>
   <br>Local Water Level Predictor</br>
+  <br>
+  <a href="https://www.docker.com/">
+    <img src=".images/docker.png" width="100" border-radius="50%"/>
+  </a>
+  <a href="https://podman.io/">
+    <img src=".images/podman.png" width="100" border-radius="50%"/> 
+  </a>
 </h1>
 
 <h2 align="center">
 
-[![Build](https://github.com/barbacbd/predictor/actions/workflows/python-app.yml/badge.svg)](https://github.com/barbacbd/predictor/actions/workflows/python-app.yml) [![GitHub latest commit](https://badgen.net/github/last-commit/barbacbd/cluster)](https://github.com/barbacbd/cluster/commit/)
+[![Clusters Docker](https://github.com/barbacbd/predictor/actions/workflows/clusters-image.yml/badge.svg)](https://github.com/barbacbd/predictor/actions/workflows/clusters-image.yml)[![Criteria Docker](https://github.com/barbacbd/predictor/actions/workflows/criteria-image.yml/badge.svg)](https://github.com/barbacbd/predictor/actions/workflows/criteria-image.yml)[![Features Docker](https://github.com/barbacbd/predictor/actions/workflows/features-image.yml/badge.svg)](https://github.com/barbacbd/predictor/actions/workflows/features-image.yml)
+
+[![GitHub latest commit](https://badgen.net/github/last-commit/barbacbd/cluster)](https://github.com/barbacbd/cluster/commit/)
 
 
 ## Description
@@ -56,23 +65,7 @@ A rough convention for commit messages that is designed to answer two
 questions: what changed and why. The subject line should feature the what and
 the body of the commit should describe the why.
 
-<br>
-<br>
-
-<br>Containerization</br>
-  <a href="https://www.docker.com/">
-    <img src=".images/docker.png" width="100" border-radius="50%"/>
-  </a>
-  <a href="https://podman.io/">
-    <img src=".images/podman.png" width="100" border-radius="50%"/> 
-  </a>
-
-[![Clusters Docker](https://github.com/barbacbd/predictor/actions/workflows/clusters-image.yml/badge.svg)](https://github.com/barbacbd/predictor/actions/workflows/clusters-image.yml)
-[![Criteria Docker](https://github.com/barbacbd/predictor/actions/workflows/criteria-image.yml/badge.svg)](https://github.com/barbacbd/predictor/actions/workflows/criteria-image.yml)
-[![Features Docker](https://github.com/barbacbd/predictor/actions/workflows/features-image.yml/badge.svg)](https://github.com/barbacbd/predictor/actions/workflows/features-image.yml)
-</h1>
-
-# Images
+## Images
 
 - [Clusters](https://github.com/barbacbd/predictor/blob/master/pods/clusters/README.md)
 - [Criteria](https://github.com/barbacbd/predictor/blob/master/pods/criteria/README.md)
