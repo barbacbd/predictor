@@ -64,12 +64,6 @@ The original data sets for this project can be found [here](https://github.com/b
 Data _should_ be provided as a single line of data consisting of floating point numbers. 
 
 
-## Related Projects
-
-- [Development Image](https://github.com/barbacbd/predictor-dev-image)
-- [Pods](https://github.com/barbacbd/predictor-pods)
-- [Data sets](https://github.com/barbacbd/predictor-datasets)
-
 ## Extra Documentation
 
 - [Clusters](user/docs/Cluster.md)

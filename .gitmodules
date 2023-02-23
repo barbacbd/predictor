@@ -1,3 +1,0 @@
-[submodule "predictor-pods"]
-	path = predictor-pods
-	url = https://github.com/barbacbd/predictor-pods.git
