@@ -1,0 +1,21 @@
+name: Clusters Docker
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Update all packages
+      run: sudo apt-get -y update
+    - name: Build the Docker image
+      run: pushd pods && pushd clusters && docker build . -t clusters:citest && popd && popd
+
