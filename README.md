@@ -16,7 +16,7 @@
 
 [![Clusters Docker](https://github.com/barbacbd/predictor/actions/workflows/clusters-image.yml/badge.svg)](https://github.com/barbacbd/predictor/actions/workflows/clusters-image.yml)[![Criteria Docker](https://github.com/barbacbd/predictor/actions/workflows/criteria-image.yml/badge.svg)](https://github.com/barbacbd/predictor/actions/workflows/criteria-image.yml)[![Features Docker](https://github.com/barbacbd/predictor/actions/workflows/features-image.yml/badge.svg)](https://github.com/barbacbd/predictor/actions/workflows/features-image.yml)
 
-[![GitHub latest commit](https://badgen.net/github/last-commit/barbacbd/cluster)](https://github.com/barbacbd/cluster/commit/)
+[![GitHub latest commit](https://badgen.net/github/last-commit/barbacbd/predictor)](https://github.com/barbacbd/predictor/commit/)
 
 
 ## Description
