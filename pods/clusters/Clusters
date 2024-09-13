@@ -261,14 +261,39 @@ def main():
 
     print("Executing {} algorithm on clusters {} - {}".format(algorithm.name, min_k, max_k))
 
+    data_as_list = data_set.flatten().tolist()
+    
     cluster_data = []
     for k in list(range(min_k, max_k+1)):
-        cluster_data.append(func(data_set, k))
+        output = func(data_set, k)
+        if len(output) != len(data_as_list):
+            print("function output len ({}) != len of original data ({}): k = {}".format(
+                len(output),
+                len(data_as_list),
+                k
+            ))
+            exit(2)
 
-    json_data = {}
-    # ndarray not dataframe so tolist not to_list
-    json_data["data"] = data_set.flatten().tolist()
-    json_data["clusters"] = cluster_data
+        cluster_data.append(output)
+
+    data_points = []
+    for i in range(len(data_as_list)):
+        data_point = {
+            "data_point": data_as_list[i],
+            "data_point_index": i,
+            "clusters": {
+                ".comment": "k values for data point, ranging from {} to {}.".format(
+                    min_k, max_k
+                )
+            }
+        }
+
+        for k in range(len(cluster_data)):
+            data_point["clusters"][str(k+min_k)] = cluster_data[k][i]
+
+        data_points.append(data_point)
+
+    json_data = {"data_points": data_points, "clusters": cluster_data}
 
     with open(create_output_file(args.file, "json"), "w+") as jsonFile:
         jsonFile.write(dumps(json_data, indent=4))

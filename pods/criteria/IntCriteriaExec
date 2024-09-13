@@ -77,10 +77,10 @@ def main():
     with open(filename, "rb") as jsonFile:
         json_data = load(jsonFile)
 
-    if "data" not in json_data:
+    if "data_points" not in json_data:
         # Error out when data was not present
         exit(2)
-    dataset = json_data["data"]
+    dataset = [x["data_point"] for x in json_data["data_points"]]
 
     # reshape the data like it is expected for the library
     dataset = np.asarray(dataset)

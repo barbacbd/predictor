@@ -83,7 +83,7 @@ function RunPods() {
     # Execute the Cluster and Criteria on all of the directories that were created above
     for dirname in "${SourceFiles[@]}"; do
         if [ -d "$dirname" ]; then
-           docker run --privileged -v ${PWD}/${dirname}:/output clusters:latest /Clusters /output/${dirname} -a E_BINS --min_k 2 --max_k 50
+           docker run --privileged -v ${PWD}/${dirname}:/output clusters:latest /Clusters /output/${dirname} -a K_MEANS --min_k 2 --max_k 50
            docker run --privileged -v ${PWD}/${dirname}:/output criteria:latest /IntCriteriaExec /output -c ALL --skip_gdi
         else
             LOG "Failed to execute Clusters and Criteria on ${dirname}"
