@@ -28,7 +28,15 @@ PODS_BASE=pods
 PODS_DIRS=$(dir $(wildcard $(PODS_BASE)/*/))
 # Users can set the BUILD_TYPE={devel,release}
 BUILD_TYPE=devel
+# Users can set the specific ssh file used for github. The key or filename
+# should contain a public and private key. You can find these files in
+# ~/.ssh. 
+SSH_FILENAME=github_ed25519
 
+prv_key_file=~/.ssh/${SSH_FILENAME}
+pub_key_file=~/.ssh/${SSH_FILENAME}.pub
+prv_key=$(shell cat $(prv_key_file) | sed '/-----BEGIN OPENSSH PRIVATE KEY-----/d' | sed '/-----END OPENSSH PRIVATE KEY-----/d')
+pub_key=$(shell cat $(pub_key_file))
 
 install:
 	mkdir -p $(INSTALL_DIR)
@@ -39,7 +47,7 @@ images:
 		pushd $$dir; \
 		local_dir=$${PWD##*/}; \
 		dirname=$${local_dir:-/}; \
-		docker build . -t $${dirname}:latest --build-arg build=$(BUILD_TYPE); \
+		docker build . -t $${dirname}:latest --build-arg build=$(BUILD_TYPE) --build-arg ssh_prv_key="${prv_key}" --build-arg ssh_pub_key="${pub_key}" --squash; \
 		popd; \
 	done
 

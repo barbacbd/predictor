@@ -172,7 +172,7 @@ while getopts b:d:hx flag
 do
     case "${flag}" in
 	b) BuildType=${OPTARG};;
-        d) SourceDir=${OPTARG};;
+    d) SourceDir=${OPTARG};;
 	h) HELP; exit 1;;
 	x) set -eux;;
     esac
